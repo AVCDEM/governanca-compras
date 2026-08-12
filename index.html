@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Governança em Compras — Protótipo</title>
+<style>
+  :root{
+    --ink:#33333b;--muted:#5f5b70;--faint:#9a96a8;--line:#ece9f3;--line2:#f4f2f9;--card:#fff;
+    --grad-a:#7c6cf0;--grad-b:#e879a6;--grad-c:#f6b878;
+    --grad:linear-gradient(110deg,#7c6cf0 0%,#e879a6 55%,#f6b878 100%);
+    --good:#2e9b5e;--warn:#d98a0b;--bad:#d6456a;
+    --shadow:0 1px 2px rgba(40,30,80,.05),0 10px 34px -14px rgba(40,30,80,.20);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:"Segoe UI",system-ui,-apple-system,Arial,sans-serif;color:var(--ink);font-size:14px;line-height:1.45;
+    background:radial-gradient(900px 520px at 10% 6%,rgba(124,108,240,.08),transparent 60%),radial-gradient(900px 600px at 90% 10%,rgba(232,121,166,.08),transparent 60%),linear-gradient(180deg,#fbfaff,#f6f5fb);min-height:100vh}
+  .screen{display:none}
+  .screen.active{display:block}
+  .screen.login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;padding:20px}
+  .screen.login-screen.active{display:flex}
+
+  /* topbar */
+  .topbar{background:rgba(255,255,255,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:15px 34px;display:flex;align-items:center;gap:14px}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:800;letter-spacing:-.01em;font-size:16px}
+  .spdot{width:30px;height:30px;border-radius:9px;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px}
+  .who{margin-left:auto;display:flex;align-items:center;gap:14px;font-size:13px;color:var(--muted)}
+  .who .role-tag{background:rgba(124,108,240,.1);color:var(--grad-a);font-weight:700;border-radius:999px;padding:5px 13px;font-size:12.5px}
+  .who .avatar{width:32px;height:32px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px}
+  .who .sair{color:var(--faint);font-weight:600;cursor:pointer;font-size:12.5px}
+
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 34px 70px}
+  .wrap.wide{max-width:1300px}
+  .pagehead h1{font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+  .pagehead h1 .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+  /* KPIs */
+  .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:22px 0 18px}
+  .kpis.four{grid-template-columns:repeat(4,1fr)}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:19px 22px;box-shadow:var(--shadow);border-left:4px solid var(--grad-a)}
+  .kpi.k2{border-left-color:var(--bad)}.kpi.k3{border-left-color:var(--warn)}.kpi.k4{border-left-color:var(--grad-a)}
+  .kpi .lbl{font-size:12.5px;color:var(--muted);font-weight:600;display:flex;align-items:center;gap:6px}
+  .kpi .val{font-size:30px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+  .kpi.k1 .val{color:var(--grad-a)}.kpi.k2 .val{color:var(--bad)}.kpi.k3 .val{color:var(--warn)}.kpi.k4 .val{color:var(--grad-a)}
+  .kpi.clickable{cursor:pointer;transition:.15s}.kpi.clickable:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px rgba(40,30,80,.28)}
+  .kpi .tagclick{font-size:10px;color:var(--grad-a);font-weight:700;margin-top:4px}
+
+  /* filtros/segment */
+  .filt-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+  .filt-lbl{font-size:11px;font-weight:700;color:var(--faint);text-transform:uppercase;letter-spacing:.04em}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;box-shadow:var(--shadow)}
+  .seg button{font:inherit;font-size:13px;font-weight:700;padding:9px 18px;border:none;background:#fff;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:7px}
+  .seg button.on{background:var(--grad);color:#fff}
+  .coord-chips{display:flex;gap:7px;flex-wrap:wrap}
+  .coord{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:700;color:var(--muted);cursor:pointer}
+  .coord.on{background:rgba(124,108,240,.1);color:var(--grad-a);border-color:rgba(124,108,240,.3)}
+  .filt-btn{margin-left:auto;display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+  .filt-btn:hover{border-color:var(--grad-a);color:var(--grad-a)}
+
+  /* tabela base */
+  .listwrap{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;text-align:left;padding:14px 14px;border-bottom:1px solid var(--line);background:#fbfaff;white-space:nowrap}
+  td{padding:14px 14px;border-bottom:1px solid var(--line2);font-size:13.5px;vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  .row-main{cursor:pointer}
+  .row-main:hover td{background:#faf9fe}
+  .row-prio td:first-child{box-shadow:inset 3px 0 0 var(--grad-c)}
+  .exp-arrow{color:var(--faint);font-size:12px;transition:transform .2s;display:inline-block;width:14px}
+  .exp-arrow.open{transform:rotate(90deg);color:var(--grad-a)}
+  .obj-cell{font-weight:600}
+  .prio-star{color:var(--grad-c);margin-right:5px}
+  .st{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:11px;padding:4px 9px;border-radius:999px;white-space:nowrap}
+  .st::before{content:"";width:6px;height:6px;border-radius:50%}
+  .st.ok{background:#e6f5ec;color:#2e8b3d}.st.ok::before{background:#2e8b3d}
+  .st.run{background:#eeebfc;color:#6a4fb0}.st.run::before{background:#6a4fb0}
+  .st.late{background:#fbe9ee;color:#c0395a}.st.late::before{background:#c0395a}
+  .st.pend{background:#fff4e0;color:#b9750a}.st.pend::before{background:#d98a0b}
+  .info-dot{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--line);display:inline-flex;align-items:center;justify-content:center;color:var(--grad-a);cursor:pointer;font-size:13px;font-weight:800}
+  .info-dot:hover{border-color:var(--grad-a);background:rgba(124,108,240,.06)}
+  .prazo-late{color:var(--bad);font-weight:700}
+
+  /* expansão */
+  .exp-row{display:none}
+  .exp-row.open{display:table-row}
+  .exp-row td{background:#faf9fe;padding:0}
+  .exp-inner{padding:18px 28px 22px 28px}
+  .mini-gantt{margin-bottom:16px}
+  .mg-months{display:flex;justify-content:space-between;font-size:9.5px;color:var(--faint);font-weight:600;margin-bottom:6px}
+  .mg-row{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+  .mg-lbl{width:74px;font-size:10.5px;font-weight:700;color:var(--muted);text-align:right;flex:none}
+  .mg-track{flex:1;height:13px;background:#eceaf3;border-radius:6px;position:relative;overflow:hidden}
+  .mg-bar{position:absolute;top:0;bottom:0;border-radius:6px}
+  .b-plan{background:rgba(124,108,240,.4)}
+  .b-exec{background:linear-gradient(90deg,rgba(232,121,166,.6),rgba(232,121,166,.78))}
+  .b-proj{background:repeating-linear-gradient(45deg,rgba(246,184,120,.7),rgba(246,184,120,.7) 5px,rgba(246,184,120,.42) 5px,rgba(246,184,120,.42) 10px)}
+  .mg-today{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--bad)}
+  .last-obs{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 16px;font-size:13px;color:var(--muted)}
+  .last-obs .oh{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800;margin-bottom:5px}
+  .last-obs .od{font-size:11px;color:var(--faint);margin-top:6px}
+
+  /* ==== barra de navegação da demo ==== */
+  .demobar{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(51,51,59,.94);backdrop-filter:blur(8px);border-radius:14px;padding:8px 10px;display:flex;gap:6px;z-index:60;box-shadow:0 12px 30px -8px rgba(0,0,0,.4)}
+  .demobar button{font:inherit;font-size:12px;font-weight:700;color:#d8d4e0;background:none;border:none;padding:8px 13px;border-radius:9px;cursor:pointer;transition:.15s}
+  .demobar button:hover{background:rgba(255,255,255,.12);color:#fff}
+  .demobar button.on{background:var(--grad);color:#fff}
+  .demobar .sep{width:1px;background:rgba(255,255,255,.15);margin:4px 2px}
+  .demobar .lbl{font-size:10px;color:#8a8698;padding:8px 6px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+
+  .gab-mode-prio .nao-prio{display:none}
+  .gab-mode-prio .nao-prio + .exp-row{display:none}
+  .sub-mode-prio .nao-prio{display:none}
+  .sub-mode-prio .nao-prio + .exp-row{display:none}
+  .foc-mode-prio .nao-prio{display:none}
+  .foc-mode-prio .nao-prio + .exp-row{display:none}
+  /* ==== página do processo ==== */
+  .back{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-weight:600;font-size:13px;margin-bottom:16px;cursor:pointer}
+  .back:hover{color:var(--grad-a)}
+  .proc-head{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px 26px;margin-bottom:18px}
+  .proc-title{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .proc-title h1{font-size:23px;font-weight:800;letter-spacing:-.02em;line-height:1.2;max-width:640px}
+  .prio-badge{display:inline-flex;align-items:center;gap:7px;background:linear-gradient(120deg,rgba(246,184,120,.18),rgba(232,121,166,.14));border:1px solid rgba(246,184,120,.5);color:#b9750a;border-radius:999px;padding:7px 15px;font-size:12.5px;font-weight:800;white-space:nowrap}
+  .prio-badge .star{font-size:14px}
+  .proc-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 26px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line2)}
+  .meta-item .k{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;margin-bottom:3px}
+  .meta-item .v{font-size:14.5px;font-weight:600;color:var(--ink)}
+  .meta-item .v.mono{font-family:Consolas,monospace;font-size:13px}
+  .meta-item .v.val{color:var(--grad-a);font-weight:800}
+  .main{display:grid;grid-template-columns:1fr 340px;gap:18px;align-items:start}
+  @media(max-width:1000px){.main{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:18px}
+  .card-h{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:800;margin-bottom:16px}
+  .gantt{margin-top:4px}
+  .gantt-months{display:flex;justify-content:space-between;font-size:10.5px;color:var(--faint);font-weight:600;margin-bottom:8px;padding:0 2px}
+  .gantt-row{display:flex;align-items:center;gap:12px;margin-bottom:11px}
+  .gantt-lbl{width:82px;font-size:11.5px;font-weight:700;color:var(--muted);text-align:right;flex:none}
+  .gantt-track{flex:1;height:16px;background:var(--line2);border-radius:8px;position:relative;overflow:hidden}
+  .gantt-bar{position:absolute;top:0;bottom:0;border-radius:8px}
+  .bar-plan{background:linear-gradient(90deg,rgba(124,108,240,.35),rgba(124,108,240,.5))}
+  .bar-exec{background:linear-gradient(90deg,rgba(232,121,166,.6),rgba(232,121,166,.78))}
+  .bar-proj{background:repeating-linear-gradient(45deg,rgba(246,184,120,.7),rgba(246,184,120,.7) 6px,rgba(246,184,120,.42) 6px,rgba(246,184,120,.42) 12px)}
+  .gantt-legend{display:flex;gap:18px;margin-top:12px;font-size:11.5px;color:var(--muted)}
+  .gantt-legend span{display:inline-flex;align-items:center;gap:6px}
+  .lg-dot{width:11px;height:11px;border-radius:3px}
+  .today-line{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--bad);z-index:3}
+  .today-flag{position:absolute;top:-20px;font-size:9px;color:var(--bad);font-weight:800;transform:translateX(-50%)}
+  .tl-frentes{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+  .tl-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 15px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+  .tl-chip.on{background:var(--grad);color:#fff;border-color:transparent}
+  .timeline{position:relative;padding-left:8px}
+  .timeline::before{content:"";position:absolute;left:29px;top:14px;bottom:14px;width:2px;background:var(--line)}
+  .tl-item{display:flex;gap:18px;margin-bottom:14px;position:relative}
+  .tl-date{width:44px;height:44px;border-radius:50%;flex:none;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-weight:800;line-height:1;z-index:2;box-shadow:0 4px 12px -3px rgba(0,0,0,.2)}
+  .tl-date .d{font-size:15px}.tl-date .m{font-size:9px;opacity:.9;margin-top:1px}
+  .tl-date.st-ok{background:#8fd0a8}
+  .tl-date.st-run{background:#b0a4f0}
+  .tl-date.st-late{background:#eaa0b2}
+  .tl-date.st-none{background:#d8d4e0}
+  .tl-card{flex:1;background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px 18px;box-shadow:0 4px 14px -10px rgba(40,30,80,.2)}
+  .tl-card h4{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:5px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .tl-edit{color:var(--faint);cursor:pointer;font-size:14px}
+  .tl-pact{font-size:12px;color:var(--faint);font-weight:600}
+  .tl-status{font-size:12px;font-weight:700;margin-left:8px;color:var(--muted)}
+  .tl-more{margin-top:9px;font-size:12.5px;color:var(--grad-a);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 20px;position:sticky;top:20px}
+  .panel-h{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:800;color:var(--grad-a);margin-bottom:18px}
+  .panel-h .plus{width:22px;height:22px;border-radius:50%;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .field{margin-bottom:15px}
+  .field label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800;margin-bottom:6px}
+  .field select,.field input,.field textarea{width:100%;font:inherit;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);outline:none}
+  .field textarea{resize:vertical;min-height:64px}
+  .incl{border-top:1px solid var(--line2);margin-top:6px;padding-top:14px}
+  .incl-h{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+  .incl label{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--ink);font-weight:600;margin-bottom:9px}
+  .incl input{width:16px;height:16px;accent-color:var(--grad-a)}
+  .panel-save{width:100%;margin-top:8px;background:var(--grad);color:#fff;border:none;border-radius:11px;padding:12px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 8px 20px -8px rgba(124,108,240,.5)}
+  .note-box{background:linear-gradient(110deg,rgba(124,108,240,.06),rgba(232,121,166,.05));border:1px solid var(--line);border-radius:12px;padding:12px 15px;font-size:13px;color:var(--muted);margin-top:12px}
+  .note-box b{color:var(--ink)}
+
+  .items-table{width:100%;border-collapse:collapse;margin-top:4px}
+  .items-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  .items-table td{padding:10px 12px;border-bottom:1px solid var(--line2);font-size:13px}
+  .items-table tr:last-child td{border-bottom:none}
+  .items-table .mono{font-family:Consolas,monospace;font-size:12px;color:var(--muted)}
+  .items-table .num{text-align:right;font-variant-numeric:tabular-nums}
+  .items-table tfoot td{font-weight:800;color:var(--ink);border-top:2px solid var(--line);font-size:13.5px}
+  .items-acao{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line2)}
+  .items-acao .ia{font-size:13px}
+  .items-acao .ia .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800;margin-bottom:3px}
+  .items-acao .ia .v{font-weight:600}
+  .week-now{background:linear-gradient(110deg,rgba(124,108,240,.07),rgba(232,121,166,.05));border:1px solid var(--line);border-radius:12px;padding:15px 17px;margin-bottom:12px}
+  .week-now .wh{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .week-now .wtag{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--grad-a);font-weight:800}
+  .week-now .wtxt{font-size:13.5px;color:var(--ink);line-height:1.5}
+  .week-now .wby{font-size:11px;color:var(--faint);margin-top:8px}
+  .week-add{background:#fff;border:1.5px solid var(--grad-a);color:var(--grad-a);border-radius:9px;padding:6px 13px;font-size:12px;font-weight:800;cursor:pointer}
+  .week-hist-toggle{font-size:12.5px;color:var(--grad-a);font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-top:4px}
+  .week-hist{margin-top:12px;border-top:1px solid var(--line2);padding-top:12px}
+  .week-item{padding:10px 0;border-bottom:1px solid var(--line2)}
+  .week-item:last-child{border-bottom:none}
+  .week-item .wk{font-size:11px;font-weight:800;color:var(--muted);margin-bottom:3px}
+  .week-item .wc{font-size:12.5px;color:var(--muted);line-height:1.45}
+
+  /* ==== filtros gaveta (DCC) ==== */
+  .filters-overlay{position:fixed;inset:0;background:rgba(40,30,80,.25);z-index:20;display:none}
+  .filters-overlay.open{display:block}
+  .filters{position:fixed;top:0;right:0;height:100vh;width:320px;background:var(--card);border-left:1px solid var(--line);box-shadow:-16px 0 40px -20px rgba(40,30,80,.4);padding:24px 22px;z-index:21;overflow-y:auto;transform:translateX(100%);transition:transform .28s ease}
+  .filters-overlay.open .filters{transform:translateX(0)}
+  .filters h3{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:18px;display:flex;align-items:center;justify-content:space-between}
+  .filters h3 .x{color:var(--faint);cursor:pointer;font-size:20px}
+  .ff{margin-bottom:15px}
+  .ff label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;margin-bottom:6px}
+  .ff select,.ff input{width:100%;font:inherit;font-size:13px;padding:9px 11px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);outline:none}
+  .range-val{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-weight:700;margin-top:6px}
+  input[type=range]{width:100%;accent-color:var(--grad-a);padding:0}
+  .filters-apply{width:100%;margin-top:6px;background:var(--grad);color:#fff;border:none;border-radius:10px;padding:11px;font-weight:800;font-size:13.5px;cursor:pointer}
+  .filters-clear{width:100%;margin-top:8px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:9px;font-weight:700;font-size:12.5px;cursor:pointer}
+  .validate-btn{display:inline-flex;align-items:center;gap:5px;background:#e6f5ec;color:#2e8b3d;border:1px solid rgba(46,155,94,.3);border-radius:8px;padding:6px 11px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap}
+  .validate-btn:hover{background:#2e9b5e;color:#fff}
+  .mono{font-family:Consolas,monospace;font-size:10.5px;color:var(--muted);word-break:break-all}
+  .acts{display:flex;gap:7px;align-items:center}
+
+  /* ==== indicadores DCC ==== */
+  .ind-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+  .ind-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:19px 22px;box-shadow:var(--shadow)}
+  .ind-card .il{font-size:12px;color:var(--muted);font-weight:600}
+  .ind-card .iv{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-top:5px;color:var(--grad-a)}
+  .ind-card .iu{font-size:11px;color:var(--faint);margin-top:3px}
+  .chart-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:22px 24px;margin-bottom:20px}
+  .chart-title{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint);font-weight:800;margin-bottom:20px}
+  .bars{display:flex;align-items:flex-end;gap:20px;height:230px;padding:0 10px;border-bottom:2px solid var(--line)}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+  .bar-fill{width:100%;max-width:64px;border-radius:8px 8px 0 0;background:var(--grad);position:relative;transition:.3s}
+  .bar-val{font-size:14px;font-weight:800;color:var(--ink);margin-bottom:6px}
+  .bar-label{font-size:11px;color:var(--muted);font-weight:600;margin-top:10px;text-align:center;line-height:1.2}
+  .retr-table{width:100%;border-collapse:collapse}
+  .retr-table th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);background:#fbfaff}
+  .retr-table td{padding:12px 14px;border-bottom:1px solid var(--line2);font-size:13px}
+  .retr-table tr:last-child td{border-bottom:none}
+  .retr-badge{display:inline-flex;align-items:center;justify-content:center;min-width:30px;padding:3px 10px;border-radius:999px;font-weight:800;font-size:13px}
+  .retr-badge.low{background:#e6f5ec;color:#2e8b3d}
+  .retr-badge.mid{background:#fff4e0;color:#b9750a}
+  .retr-badge.high{background:#fbe9ee;color:#c0395a}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- as telas serão inseridas aqui -->
+<!-- ============================================================ -->
+
+<!-- ===== LOGIN ===== -->
+<div class="screen login-screen active" id="screen-login">
+  <div style="background:var(--card);border:1px solid rgba(255,255,255,.9);border-radius:22px;box-shadow:0 30px 80px -24px rgba(60,40,120,.35);width:100%;max-width:410px;padding:44px 40px 36px;text-align:center">
+    <h1 style="font-size:30px;font-weight:800;letter-spacing:-.02em;line-height:1.12">Governança<br><span style="background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent">em Compras</span></h1>
+    <div style="color:var(--muted);font-size:14px;margin-top:8px;margin-bottom:30px;font-weight:600">SES-MG</div>
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800;margin-bottom:7px">E-mail institucional</label>
+      <input type="email" id="login_email" value="" placeholder="nome.sobrenome@saude.mg.gov.br" style="width:100%;font:inherit;font-size:14.5px;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;outline:none">
+    </div>
+    <div style="text-align:left;margin-bottom:16px">
+      <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800;margin-bottom:7px">Senha</label>
+      <input type="password" id="login_senha" value="" placeholder="••••••••" style="width:100%;font:inherit;font-size:14.5px;padding:13px 15px;border:1.5px solid var(--line);border-radius:12px;outline:none">
+    </div>
+    <div id="login_msg" style="display:none;text-align:left;margin-bottom:14px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:#fbe9ee;color:#c0395a"></div>
+    <div style="text-align:right;font-size:12.5px;margin-bottom:22px"><a href="#" onclick="esqueciSenha();return false;" style="color:var(--grad-a);font-weight:600;text-decoration:none">Esqueci minha senha</a></div>
+    <button onclick="fazerLogin()" style="width:100%;background:var(--grad);color:#fff;border:none;border-radius:12px;padding:14px;font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 10px 24px -8px rgba(124,108,240,.5)">Entrar</button>
+    <div style="margin-top:26px;font-size:12px;color:var(--faint);line-height:1.5">Seu acesso é definido pelo seu e-mail. Você verá apenas os processos e ações da sua área e nível.</div>
+  </div>
+</div>
+
+<!-- ===== GABINETE ===== -->
+<div class="screen" id="screen-gabinete">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag">Gabinete</span><span class="avatar">GB</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap">
+    <div class="pagehead"><h1>Painel do <span class="g">Gabinete</span></h1></div>
+    <div class="kpis">
+      <div class="kpi k1"><div class="lbl">Processos no PAC</div><div class="val">148</div></div>
+      <div class="kpi k2"><div class="lbl">Em atraso</div><div class="val">23</div></div>
+      <div class="kpi k3"><div class="lbl">Vencem em 1 mês</div><div class="val">9</div></div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl">Prioridade</span>
+      <div class="seg" id="gabSeg"><button onclick="setGabMode('prio',this)">★ Prioritário</button><button class="on" onclick="setGabMode('geral',this)">Geral</button></div>
+    </div>
+    <div class="listwrap gab-mode-geral" id="gabList">
+      <table>
+        <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
+        <tbody>
+</tbody>
+      </table>
+    </div>
+    <div style="text-align:center;color:var(--faint);font-size:12px;margin-top:18px">Mostrando prioritários · clique na seta para ver o resumo · clique no “i” para abrir o processo completo</div>
+  </div>
+</div>
+
+<!-- ===== SUBSECRETÁRIO (N2) ===== -->
+<div class="screen" id="screen-sub">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag">Subsecretaria de Vigilância em Saúde</span><span class="avatar">SV</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap">
+    <div class="pagehead"><h1>Painel da <span class="g">Subsecretaria/Assessoria</span></h1></div>
+    <div class="kpis">
+      <div class="kpi k1"><div class="lbl">Processos da subsecretaria</div><div class="val">32</div></div>
+      <div class="kpi k2"><div class="lbl">Em atraso</div><div class="val">6</div></div>
+      <div class="kpi k3"><div class="lbl">Vencem em 1 mês</div><div class="val">3</div></div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl">Prioridade</span>
+      <div class="seg" id="subSeg"><button onclick="setSubMode('prio',this)">★ Prioritário</button><button class="on" onclick="setSubMode('geral',this)">Geral</button></div>
+    </div>
+    <div class="listwrap sub-mode-geral" id="subList">
+      <table>
+        <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
+        <tbody>
+</tbody>
+      </table>
+    </div>
+    <div style="text-align:center;color:var(--faint);font-size:12px;margin-top:18px">Você vê apenas os processos da sua subsecretaria · destaque para prioritários</div>
+  </div>
+</div>
+
+<!-- ===== PONTO FOCAL (N3) ===== -->
+<div class="screen" id="screen-focal">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag">Ponto Focal · DVAST</span><span class="avatar">PF</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap">
+    <div class="pagehead"><h1>Painel do <span class="g">Ponto Focal</span></h1></div>
+    <div class="kpis">
+      <div class="kpi k1"><div class="lbl">Processos da área</div><div class="val">8</div></div>
+      <div class="kpi k2"><div class="lbl">Em atraso</div><div class="val">2</div></div>
+      <div class="kpi k3"><div class="lbl">Vencem em 1 mês</div><div class="val">1</div></div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl">Prioridade</span>
+      <div class="seg" id="focSeg"><button onclick="setFocMode('prio',this)">★ Prioritário</button><button class="on" onclick="setFocMode('geral',this)">Geral</button></div>
+    </div>
+    <div class="listwrap foc-mode-geral" id="focList">
+      <table>
+        <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
+        <tbody>
+</tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:18px">
+      <button onclick="abrirCadastro()" style="background:var(--grad);color:#fff;border:none;border-radius:11px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 8px 20px -8px rgba(124,108,240,.5)">+ Cadastrar processo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PÁGINA DO PROCESSO ===== -->
+<div class="screen" id="screen-processo">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag" id="pp_roletag"></span><span class="avatar">GC</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="back" onclick="voltarDaPagina()">← Voltar para a lista</div>
+<div class="proc-head">
+  <div class="proc-title">
+    <h1 id="pp_objeto">—</h1>
+    <span class="prio-badge" id="pp_prio"><span class="star">★</span> Prioritário</span>
+  </div>
+  <div class="proc-meta">
+    <div class="meta-item"><div class="k">Nº SEI</div><div class="v mono" id="pp_sei">—</div></div>
+    <div class="meta-item"><div class="k">Modalidade</div><div class="v" id="pp_modal">—</div></div>
+    <div class="meta-item"><div class="k">Valor previsto</div><div class="v val" id="pp_valor">—</div></div>
+    <div class="meta-item"><div class="k">Código</div><div class="v mono" id="pp_codigo">—</div></div>
+    <div class="meta-item"><div class="k">Área demandante</div><div class="v" id="pp_area">—</div></div>
+    <div class="meta-item"><div class="k">Prazo final desejado</div><div class="v" id="pp_prazo">—</div></div>
+    <div class="meta-item"><div class="k">Contrato</div><div class="v" id="pp_contrato">—</div></div>
+  </div>
+</div>
+
+<div class="main">
+  <!-- COLUNA ESQUERDA: Gantt + Timeline -->
+  <div>
+    <div class="card">
+      <div class="card-h">Linha do tempo do processo — executado real por fase</div>
+      <div id="pp_gantt_real"></div>
+      <div class="note-box" id="pp_gantt_nota">O gráfico mostra o tempo real de cada fase (entrada → retorno).</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Itens do processo</div>
+      <div class="items-acao">
+        <div class="ia"><div class="k">Ações orçamentárias</div><div class="v" id="pp_acoes">—</div></div>
+        <div class="ia"><div class="k">Total de itens</div><div class="v" id="pp_totitens">—</div></div>
+      </div>
+      <table class="items-table">
+        <thead><tr><th>Item</th><th>Nº CATMAS</th><th class="num">Qtd.</th><th class="num">Valor unit.</th><th class="num">Valor total</th></tr></thead>
+        <tbody id="pp_itens">
+        </tbody>
+        <tfoot><tr><td colspan="4">Total do processo</td><td class="num" id="pp_totvalor">—</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Resumo semanal</div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="week-add" onclick="abrirResumo()">+ Registrar resumo</button></div>
+      <div id="pp_resumos">
+        <div style="color:var(--faint);font-size:13px;text-align:center;padding:16px">Nenhum resumo registrado ainda.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">Etapas do processo (marcos)</div>
+      <div class="tl-frentes" id="tlChips">
+        <span class="tl-chip on" data-tl="todas" onclick="filtrarTimeline('todas',this)">Todas</span>
+        <span class="tl-chip" data-tl="concluidas" onclick="filtrarTimeline('concluidas',this)">Concluídas</span>
+        <span class="tl-chip" data-tl="pendentes" onclick="filtrarTimeline('pendentes',this)">Pendentes</span>
+      </div>
+      <div class="timeline" id="pp_timeline"></div>
+    </div>
+  </div>
+
+  <!-- COLUNA DIREITA: painel de atualização -->
+  <div class="panel">
+    <div class="panel-h"><span class="plus">+</span> Nova atualização</div>
+    <div class="field">
+      <label>Etapa / marco alvo</label>
+      <select id="up_etapa"><option value="">Vincular a qual etapa?</option></select>
+    </div>
+    <div class="field">
+      <label>Status atual do marco</label>
+      <select id="up_status"><option value="nao_iniciado">Não iniciado</option><option value="em_andamento">Em andamento</option><option value="em_atraso">Em atraso</option><option value="concluido">Concluído</option></select>
+    </div>
+    <div class="field">
+      <label>Observação (o que aconteceu)</label>
+      <textarea id="up_obs" placeholder="Ex.: TR retornou da análise com ressalvas; aguardando ajuste da área técnica."></textarea>
+    </div>
+    <div class="field">
+      <label>Data de conclusão</label>
+      <input type="date" id="up_dtconc">
+    </div>
+    <div class="field">
+      <label>Nova tendência / data prevista</label>
+      <input type="date" id="up_tend">
+    </div>
+    <div class="field">
+      <label>Tipo de registro</label>
+      <select id="up_tipo"><option value="avanco">⚑ Avanço</option><option value="impedimento">⏸ Impedimento / gargalo</option><option value="ajuste">✎ Ajuste de informação</option><option value="retorno">↩ Retorno para correção</option></select>
+    </div>
+    <div class="incl">
+      <div class="incl-h">◇ Sinalizar para:</div>
+      <label><input type="checkbox" class="up_sinal" value="gabinete"> Gabinete</label>
+      <label><input type="checkbox" class="up_sinal" value="subsecretaria"> Subsecretaria/Assessoria</label>
+      <label><input type="checkbox" class="up_sinal" value="dcc"> DCC</label>
+    </div>
+    <div id="up_msg" style="display:none;margin-bottom:10px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600"></div>
+    <button class="panel-save" id="up_salvar" onclick="salvarAtualizacao()">Salvar atualização</button>
+  </div>
+</div>
+  </div>
+</div>
+
+<!-- ===== DCC ===== -->
+<div class="screen" id="screen-dcc">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('indicadores')" style="cursor:pointer;font-weight:700;color:var(--grad-a);font-size:13px;padding:6px 12px;border:1.5px solid var(--grad-a);border-radius:8px">📊 Indicadores</span><span class="avatar">DC</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="pagehead"><h1>Painel da <span class="g">Diretoria de Compras e Contratos</span></h1></div>
+    <div class="kpis four">
+      <div class="kpi k1"><div class="lbl">Processos no PAC</div><div class="val">148</div></div>
+      <div class="kpi k2"><div class="lbl">Em atraso</div><div class="val">23</div></div>
+      <div class="kpi k3 clickable"><div class="lbl">⚑ Notificar área</div><div class="val">14</div><div class="tagclick">clique para filtrar →</div></div>
+      <div class="kpi k4 clickable"><div class="lbl">✓ Pendentes de validação</div><div class="val">6</div><div class="tagclick">clique para filtrar →</div></div>
+    </div>
+    <div class="filt-row">
+      <span class="filt-lbl">Prioritários</span>
+      <div class="seg" id="segPrio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
+      <span class="filt-lbl">Coordenação</span>
+      <div class="coord-chips" id="coordChips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span></div>
+      <button class="filt-btn" id="btnFiltersDcc">⚟ Filtros avançados</button>
+    </div>
+    <div class="listwrap">
+      <table style="table-layout:fixed">
+        <colgroup><col style="width:22%"><col style="width:118px"><col style="width:96px"><col style="width:74px"><col style="width:110px"><col style="width:88px"><col style="width:86px"><col style="width:104px"><col style="width:126px"></colgroup>
+        <thead><tr style="font-size:10px"><th style="font-size:10px">Objeto</th><th style="font-size:10px">Nº SEI</th><th style="font-size:10px">Área</th><th style="font-size:10px">Modal.</th><th style="font-size:10px">Etapa</th><th style="font-size:10px">Prazo etapa</th><th style="font-size:10px">Prazo final</th><th style="font-size:10px">Status</th><th></th></tr></thead>
+        <tbody>
+</tbody>
+      </table>
+    </div>
+    <div style="text-align:center;margin-top:18px">
+      <button onclick="abrirCadastro()" style="background:var(--grad);color:#fff;border:none;border-radius:11px;padding:12px 24px;font-weight:800;font-size:14px;cursor:pointer;box-shadow:0 8px 20px -8px rgba(124,108,240,.5)">+ Cadastrar processo</button>
+    </div>
+  </div>
+  <div class="filters-overlay" id="filtersOverlayDcc">
+    <div class="filters">
+      <h3>Filtros avançados <span class="x" id="closeFiltersDcc">×</span></h3>
+      <div class="ff"><label>Área demandante</label><select id="fdcc_area"><option value="">Todas as áreas</option><option>SUBVS</option><option>SUBGF</option><option>SUBRAS</option><option>SUBASS</option><option>SUBR</option></select></div>
+      <div class="ff"><label>Status</label><select id="fdcc_status"><option value="">Todos</option><option value="em_andamento">Em andamento</option><option value="em_atraso">Em atraso</option><option value="aguardando_validacao">Aguardando validação</option><option value="concluido">Concluído</option></select></div>
+      <div class="ff"><label>Nº SEI</label><input type="text" id="fdcc_sei" placeholder="Buscar por SEI..."></div>
+      <div class="ff"><label>Item CATMAS</label><input type="text" id="fdcc_catmas" placeholder="Buscar por CATMAS..."></div>
+      <div class="ff"><label>Modalidade</label><select id="fdcc_modal"><option value="">Todas</option><option>Pregão Eletrônico</option><option>Pregão Eletrônico para Registro de Preços</option><option>Dispensa</option><option>Inexigibilidade</option><option>COTEP</option><option>Concorrência</option><option>Adesão</option><option>Credenciamento</option></select></div>
+      <div class="ff"><label>Fase atual</label><select id="fdcc_fase"><option value="">Todas</option></select></div>
+      <div class="ff"><label>Objeto contém</label><input type="text" id="fdcc_objeto" placeholder="Buscar no objeto..."></div>
+      <button class="filters-apply" id="applyFiltersDcc">Aplicar filtros</button>
+      <button class="filters-clear" id="clearFiltersDcc">Limpar</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- ===== INDICADORES DCC ===== -->
+<div class="screen" id="screen-indicadores">
+  <div class="topbar">
+    <div class="brand"><span class="spdot">GC</span> Governança em Compras</div>
+    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('dcc')" style="cursor:pointer;font-weight:700;color:var(--grad-a);font-size:13px;padding:6px 12px;border:1.5px solid var(--grad-a);border-radius:8px">← Painel</span><span class="avatar">DC</span><span class="sair" onclick="showScreen('login')">↳ Sair</span></div>
+  </div>
+  <div class="wrap wide">
+    <div class="pagehead"><h1>Indicadores da <span class="g">DCC</span></h1></div>
+    <div class="ind-grid">
+      <div class="ind-card"><div class="il">Retrabalho médio de TR</div><div class="iv" id="ind_retr_media">—</div><div class="iu">idas e voltas por processo (média geral)</div></div>
+      <div class="ind-card"><div class="il">Processos ativos</div><div class="iv" id="ind_total">—</div><div class="iu">no PAC 2026</div></div>
+      <div class="ind-card"><div class="il">Processos por situação</div><div class="iv" id="ind_situacao" style="font-size:21px;color:var(--ink)">—</div><div class="iu">no prazo · atrasados</div></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Processos por coordenação atual</div>
+      <div class="bars" id="ind_bars"></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Retrabalho de TR por processo — quantas vezes o TR foi e voltou</div>
+      <table class="retr-table">
+        <thead><tr><th>Processo</th><th>Área / superintendência</th><th style="text-align:center">Idas e voltas do TR</th></tr></thead>
+        <tbody id="ind_retr_body"></tbody>
+      </table>
+      <div style="font-size:12px;color:var(--faint);margin-top:14px;line-height:1.5">Contagem baseada nas atualizações de etapa registradas no sistema — cada retorno de "TR em análise" para "TR em elaboração" conta como uma volta. Valores altos podem indicar necessidade de apoio ao ponto focal.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MODAL DE CADASTRO ===== -->
+<div id="cadOverlay" style="display:none;position:fixed;inset:0;background:rgba(40,30,80,.35);z-index:80;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 16px">
+  <div style="background:#fff;border-radius:20px;max-width:760px;width:100%;box-shadow:0 30px 80px -20px rgba(40,30,80,.5);margin:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px;border-bottom:1px solid var(--line)">
+      <h2 style="font-size:19px;font-weight:800;color:var(--ink)">Cadastrar processo</h2>
+      <span onclick="fecharCadastro()" style="cursor:pointer;color:var(--faint);font-size:24px;line-height:1">×</span>
+    </div>
+    <div style="padding:24px 26px">
+      <div id="cadMsg" style="display:none;margin-bottom:16px;padding:11px 15px;border-radius:10px;font-size:13px;font-weight:600"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px 18px">
+        <div style="grid-column:1/-1"><label class="cad-l">Objeto da contratação *</label><input id="c_objeto" class="cad-i" placeholder="Ex.: Aquisição de câmaras de conservação"></div>
+        <div><label class="cad-l">Nº SEI</label><input id="c_sei" class="cad-i" placeholder="1320.01.XXXXXXX/2026-XX"></div>
+        <div><label class="cad-l">Modalidade</label><select id="c_modal" class="cad-i"><option value="">— selecione —</option><option>Pregão Eletrônico</option><option>Pregão Eletrônico para Registro de Preços</option><option>Dispensa</option><option>Inexigibilidade</option><option>COTEP</option><option>Concorrência</option><option>Adesão</option><option>Credenciamento</option></select></div>
+        <div><label class="cad-l">Valor previsto (R$)</label><input id="c_valor" class="cad-i" type="number" placeholder="Ex.: 50000000"></div>
+        <div><label class="cad-l">Prazo final desejado</label><input id="c_prazo" class="cad-i" placeholder="Ex.: Agosto/2026"></div>
+        <div><label class="cad-l">Subsecretaria</label><select id="c_sub" class="cad-i" onchange="atualizarSupers()"><option value="">— selecione —</option></select></div>
+        <div><label class="cad-l">Superintendência</label><select id="c_super" class="cad-i" onchange="atualizarDiretorias()"><option value="">— selecione a subsecretaria —</option></select></div>
+        <div><label class="cad-l">Diretoria</label><select id="c_diretoria" class="cad-i"><option value="">— selecione a superintendência —</option></select></div>
+        <div><label class="cad-l">Natureza</label><select id="c_nat" class="cad-i"><option>Recorrente</option><option>Extraordinária</option></select></div>
+        <div><label class="cad-l">Etapa atual</label><select id="c_etapa" class="cad-i"></select></div>
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;margin-top:2px"><input id="c_prio" type="checkbox" style="width:17px;height:17px;accent-color:var(--grad-a)"><label for="c_prio" style="font-size:13.5px;font-weight:600;color:var(--ink)">Marcar como prioritário</label></div>
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;margin-top:2px"><input id="c_contrato" type="checkbox" style="width:17px;height:17px;accent-color:var(--grad-a)"><label for="c_contrato" style="font-size:13.5px;font-weight:600;color:var(--ink)">Este processo tem contrato</label></div>
+      </div>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800">Itens do processo</span><button onclick="addItemLinha()" style="background:none;border:1.5px solid var(--grad-a);color:var(--grad-a);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:800;cursor:pointer">+ item</button></div>
+        <div id="cadItens"></div>
+      </div>
+
+      <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line2)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800">Ações orçamentárias</span><button onclick="addAcaoLinha()" style="background:none;border:1.5px solid var(--grad-a);color:var(--grad-a);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:800;cursor:pointer">+ ação</button></div>
+        <div id="cadAcoes"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 26px;border-top:1px solid var(--line);background:#fbfaff;border-radius:0 0 20px 20px">
+      <button onclick="fecharCadastro()" style="background:#fff;border:1px solid var(--line);color:var(--muted);border-radius:10px;padding:11px 20px;font-weight:700;font-size:13.5px;cursor:pointer">Cancelar</button>
+      <button id="cadSalvar" onclick="salvarCadastro()" style="background:var(--grad);color:#fff;border:none;border-radius:10px;padding:11px 24px;font-weight:800;font-size:13.5px;cursor:pointer">Salvar processo</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .cad-l{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;margin-bottom:6px}
+  .cad-i{width:100%;font:inherit;font-size:13.5px;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);outline:none}
+  .cad-i:focus{border-color:var(--grad-a)}
+  .cad-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center}
+  .cad-row input{font:inherit;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;outline:none}
+  .cad-row input:focus{border-color:var(--grad-a)}
+  .cad-del{cursor:pointer;color:var(--bad);font-weight:800;font-size:16px;text-align:center}
+  .cad-acao-row{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin-bottom:8px;align-items:center}
+  .cad-acao-row input{font:inherit;font-size:13px;padding:8px 10px;border:1.5px solid var(--line);border-radius:8px;outline:none}
+</style>
+
+<!-- ===== MODAL TROCAR SENHA (primeiro acesso) ===== -->
+<div id="trocaSenhaOverlay" style="display:none;position:fixed;inset:0;background:rgba(40,30,80,.45);z-index:90;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#fff;border-radius:20px;max-width:420px;width:100%;box-shadow:0 30px 80px -20px rgba(40,30,80,.5);padding:30px">
+    <h2 style="font-size:19px;font-weight:800;color:var(--ink);margin-bottom:8px">Bem-vindo(a)! Crie sua senha</h2>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Este é seu primeiro acesso. Defina uma senha pessoal para continuar.</p>
+    <div style="margin-bottom:14px">
+      <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;margin-bottom:6px">Nova senha</label>
+      <input type="password" id="ts_senha1" placeholder="Mínimo 6 caracteres" style="width:100%;font:inherit;font-size:14px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;outline:none">
+    </div>
+    <div style="margin-bottom:16px">
+      <label style="display:block;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint);font-weight:800;margin-bottom:6px">Confirme a senha</label>
+      <input type="password" id="ts_senha2" placeholder="Repita a senha" style="width:100%;font:inherit;font-size:14px;padding:12px 14px;border:1.5px solid var(--line);border-radius:10px;outline:none">
+    </div>
+    <div id="ts_msg" style="display:none;margin-bottom:14px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:600;background:#fbe9ee;color:#c0395a"></div>
+    <button onclick="confirmarTrocaSenha()" style="width:100%;background:var(--grad);color:#fff;border:none;border-radius:11px;padding:13px;font-weight:800;font-size:14px;cursor:pointer">Definir senha e entrar</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   GOVERNANÇA EM COMPRAS — Sistema (conexão Supabase)
+   Projeto novo. Estrutura de dados: processos, itens, ações,
+   etapas, atualizações, resumos, usuarios.
+   ============================================================ */
+const SUPABASE_URL="https://tatinrolrssjervuykej.supabase.co";
+const SUPABASE_KEY="sb_publishable_aVqoiWTe0PsSi8dd19cF9A_JHEaNPJj";
+const SB_REST=SUPABASE_URL+"/rest/v1";
+// chave nova (sb_publishable_...): enviar só no header 'apikey'
+const SB_HEADERS={"apikey":SUPABASE_KEY,"Content-Type":"application/json"};
+
+// ---- helpers REST genéricos ----
+async function sbGet(path){
+  const r=await fetch(SB_REST+path,{headers:SB_HEADERS});
+  if(!r.ok){throw new Error("GET "+path+" ("+r.status+"): "+(await r.text().catch(()=>"")));}
+  return r.json();
+}
+async function sbPost(tabela,payload){
+  const r=await fetch(SB_REST+"/"+tabela,{method:"POST",headers:{...SB_HEADERS,"Prefer":"return=representation"},body:JSON.stringify(payload)});
+  if(!r.ok){throw new Error("POST "+tabela+" ("+r.status+"): "+(await r.text().catch(()=>"")));}
+  return r.json();
+}
+async function sbPatch(tabela,filtro,patch){
+  const r=await fetch(SB_REST+"/"+tabela+"?"+filtro,{method:"PATCH",headers:{...SB_HEADERS,"Prefer":"return=representation"},body:JSON.stringify(patch)});
+  if(!r.ok){throw new Error("PATCH "+tabela+" ("+r.status+"): "+(await r.text().catch(()=>"")));}
+  return r.json();
+}
+async function sbDelete(tabela,filtro){
+  const r=await fetch(SB_REST+"/"+tabela+"?"+filtro,{method:"DELETE",headers:SB_HEADERS});
+  if(!r.ok){throw new Error("DELETE "+tabela+" ("+r.status+")");}
+  return true;
+}
+
+// ---- as 8 fases do processo (para etapas e status) ----
+const FASES=[
+  {key:"f-etp-e",label:"ETP em elaboração",ordem:1},
+  {key:"f-etp-a",label:"ETP em análise",ordem:2},
+  {key:"f-tr-e",label:"TR em elaboração",ordem:3},
+  {key:"f-tr-a",label:"TR em análise",ordem:4},
+  {key:"f-pp",label:"Pesquisa de preços",ordem:5},
+  {key:"f-jur",label:"Saneamento de ressalvas jurídicas",ordem:6},
+  {key:"f-hom",label:"Homologação - Portal de Compras",ordem:7},
+  {key:"f-parado",label:"Parado/Sem previsão",ordem:99}
+];
+const COORDENACOES=["CAP","COA","CL"];
+// mapa: qual coordenação cuida de cada fase (pelo rótulo da fase/etapa)
+const FASE_COORD={
+  // CAP — fases de ETP e TR
+  "ETP 1ª análise":"CAP","ETP conferência":"CAP","ETP conferência final":"CAP",
+  "TR 1ª análise":"CAP","TR conferência":"CAP","TR conferência final":"CAP",
+  "Conferência pré-pesquisa de preços":"CAP","Conferência pré-solicitação de gestão de RP":"CAP",
+  // COA — pesquisa de preços
+  "Análise da justificativa de preço":"COA","Realização da pesquisa de preços":"COA",
+  "Cumprimento de ressalvas jurídicas":"COA","Alteração no mapa de preços a pedido do setor demandante":"COA",
+  // CL — instrução, edital, sessão, homologação
+  "Preparação para saneamento de ressalvas":"CL","Conferência processual e encaminhamento para análise jurídica":"CL",
+  "Conferência processual e preparação para encaminhamento à Assessoria Jurídica":"CL",
+  "Conferência processual e elaboração de aviso e anexos":"CL","Conferência processual e elaboração do Edital e anexos":"CL",
+  "Conferência processual e solicitação de autorização para gestão de RP à Seplag":"CL",
+  "Conferência processual, aprovação e solicitar assinatura do ato de autorização":"CL",
+  "Elaboração do Edital e anexos":"CL","Criação do IRP":"CL","Divulgação e preparação para Sessão Pública":"CL",
+  "Sessão Pública":"CL","Sessão Pública com recurso":"CL","Encerramento e Adjudicação":"CL",
+  "Saneamento de ressalvas e finalização do edital":"CL","Saneamento de ressalvas e homologação":"CL",
+  "Saneamento de ressalvas e preparação para homologação":"CL","Homologar e finalizar":"CL","Homologação e finalização":"CL",
+  "Aprovação e divulgação":"CL","Solicita adequações - Instrução processual":"CL","Termo de adesão e Consolidação das Adesões":"CL",
+  // CFCO — contratos
+  "Elaboração de minuta":"CFCO","Conferência do contrato pela SILC":"CFCO","Disponibilização para assinaturas":"CFCO",
+  "Publicação e lançamento no Portal de Compras":"CFCO"
+  // "Outros" aparece em várias coordenações -> sem coordenação fixa (só em "Todas")
+  // fases macro antigas (compatibilidade com processos não migrados):
+  ,"ETP em elaboração":"CAP","ETP em análise":"CAP","TR em elaboração":"CAP","TR em análise":"CAP"
+  ,"Pesquisa de preços":"COA","Conferência processual":"CL","Saneamento de ressalvas jurídicas":"CL"
+  ,"Edital":"CL","Sessão pública":"CL","Cotação Eletrônica de Preços":"CL","Gestão SEPLAG":"CL"
+  ,"Homologação":"CL","Homologação - Portal de Compras":"CL"
+};
+// dado um processo, retorna a coordenação da etapa atual (ou null)
+// fases detalhadas reais (do histórico) para dropdowns, únicas e ordenadas por coordenação
+const FASES_DETALHADAS=(function(){
+  const arr=[];
+  for(const [fase,coord] of Object.entries(FASE_COORD)){
+    if(['ETP em elaboração','ETP em análise','TR em elaboração','TR em análise','Pesquisa de preços','Conferência processual','Saneamento de ressalvas jurídicas','Edital','Sessão pública','Cotação Eletrônica de Preços','Gestão SEPLAG','Homologação','Homologação - Portal de Compras'].includes(fase))continue;
+    arr.push({fase,coord});
+  }
+  arr.push({fase:'Outros',coord:null});
+  arr.push({fase:'Parado/Sem previsão',coord:null});
+  return arr;
+})();
+function opcoesFaseDetalhada(selecionada){
+  const ordem={CAP:1,COA:2,CL:3,CFCO:4};
+  const sorted=FASES_DETALHADAS.slice().sort((a,b)=>(ordem[a.coord]||9)-(ordem[b.coord]||9));
+  return sorted.map(f=>'<option value="'+f.fase.replace(/"/g,'&quot;')+'"'+(f.fase===selecionada?' selected':'')+'>'+(f.coord?'['+f.coord+'] ':'')+f.fase+'</option>').join('');
+}
+function coordDoProcesso(p){
+  const et=p.etapa_atual||'';
+  // etapa_atual pode ser uma key macro (f-tr-a) ou um rótulo detalhado direto
+  const lbl=FASE_LABEL[et]||et;
+  return FASE_COORD[lbl]||FASE_COORD[et]||null;
+}
+const HIERARQUIA={"SUBRAS": {"nome": "Subsecretaria de Redes de Atenção à Saúde", "supers": {"SAPS": {"nome": "Superintendência de Atenção Primária", "dirs": [{"sig": "DEFAPS", "nome": "Diretoria de Estruturação e Financiamento da Atenção Primária à Saúde"}, {"sig": "DPAPS", "nome": "Diretoria de Políticas de Atenção Primária à Saúde"}, {"sig": "DGIC", "nome": "Diretoria de Gestão da Integralidade do Cuidado"}, {"sig": "DPSPE", "nome": "Diretoria de Promoção da Saúde e Políticas de Equidade"}]}, "SAE": {"nome": "Superintendência de Atenção Especializada", "dirs": [{"sig": "DATE", "nome": "Diretoria de Políticas Estratégicas"}, {"sig": "DAE", "nome": "Diretoria de Políticas e Estruturação de Atenção Especializada"}]}, "SPAH": {"nome": "Superintendência de Políticas de Atenção Hospitalar", "dirs": [{"sig": "DEHUE", "nome": "Diretoria de Estruturação Hospitalar e de Urgência e Emergência"}, {"sig": "DAHUE", "nome": "Diretoria de Atenção Hospitalar e Urgência e Emergência"}]}}}, "SUBVS": {"nome": "Subsecretaria de Vigilância em Saúde", "supers": {"SVE": {"nome": "Superintendência de Vigilância Epidemiológica", "dirs": [{"sig": "DVDTI", "nome": "Diretoria de Vigilância de Doenças Transmissíveis e Imunização"}, {"sig": "DVCC", "nome": "Diretoria de Vigilância de Condições Crônicas"}, {"sig": "DVAST", "nome": "Diretoria de Vigilância em Saúde Ambiental e Saúde do Trabalhador"}]}, "SVS": {"nome": "Superintendência de Vigilância Sanitária", "dirs": [{"sig": "DVSS", "nome": "Diretoria de Vigilância em Serviços de Saúde"}, {"sig": "DVA", "nome": "Diretoria de Vigilância em Alimentos"}, {"sig": "DVMC", "nome": "Diretoria de Vigilância em Medicamentos e Congêneres"}, {"sig": "DVEF", "nome": "Diretoria de Vigilância em Estrutura Física"}]}}}, "SUBASS": {"nome": "Subsecretaria de Acesso a Serviços de Saúde", "supers": {"SAF": {"nome": "Superintendência de Assistência Farmacêutica", "dirs": [{"sig": "DPAF", "nome": "Diretoria de Políticas de Assistência Farmacêutica"}, {"sig": "DPAM", "nome": "Diretoria de Planejamento e Aquisição de Medicamentos"}, {"sig": "DDM", "nome": "Diretoria de Distribuição de Medicamentos"}]}, "SRA": {"nome": "Superintendência de Regulação do Acesso", "dirs": [{"sig": "DERE", "nome": "Diretoria de Estratégias em Regulação Eletiva"}, {"sig": "DRAUE", "nome": "Diretoria de Regulação do Acesso de Urgência e Emergência"}]}, "SJUD": {"nome": "Superintendência de Judicialização da Saúde", "dirs": [{"sig": "DCDJ", "nome": "Diretoria de Cumprimento de Decisões Judiciais"}, {"sig": "DIJ", "nome": "Diretoria de Inteligência em Judicialização"}]}}}, "SUBGF": {"nome": "Subsecretaria de Gestão e Finanças", "supers": {"SPF": {"nome": "Superintendência de Planejamento e Finanças", "dirs": [{"sig": "DCF", "nome": "Diretoria de Contabilidade e Finanças"}, {"sig": "DCR", "nome": "Diretoria de Convênios e Resoluções"}, {"sig": "DPC", "nome": "Diretoria de Prestação de Contas"}, {"sig": "DPO", "nome": "Diretoria de Planejamento e Orçamento"}]}, "SGDP": {"nome": "Superintendência de Gestão e Desenvolvimento de Pessoas", "dirs": [{"sig": "DPDH", "nome": "Diretoria de Planejamento e Desenvolvimento Humano"}, {"sig": "DRH", "nome": "Diretoria de Recursos Humanos"}]}, "SILC": {"nome": "Superintendência de Infraestrutura, Logística e Contratações", "dirs": [{"sig": "DCC", "nome": "Diretoria de Compras e Contratos"}, {"sig": "DIFE", "nome": "Diretoria de Infraestrutura Física e Engenharia"}, {"sig": "DPAT", "nome": "Diretoria de Patrimônio"}, {"sig": "DLOG", "nome": "Diretoria de Logística"}]}}}, "SUBR": {"nome": "Subsecretaria de Regionalização", "supers": {"SIR": {"nome": "Superintendência de Integração Regional", "dirs": [{"sig": "DARPS", "nome": "Diretoria de Articulação Regional de Políticas de Saúde"}, {"sig": "DMPS", "nome": "Diretoria de Monitoramento de Políticas de Saúde"}]}}}};
+const ORGAOS_N1=[{"sig": "ASJUR", "nome": "Assessoria Jurídica"}, {"sig": "ASCOM", "nome": "Assessoria de Comunicação Social"}, {"sig": "AEST", "nome": "Assessoria Estratégica"}, {"sig": "ASRI", "nome": "Assessoria de Relações Institucionais"}, {"sig": "ATI", "nome": "Assessoria de Tecnologia e Informação"}, {"sig": "CSET", "nome": "Controladoria Setorial"}, {"sig": "AUDSUS", "nome": "Auditoria do SUS-MG"}, {"sig": "ASPAR", "nome": "Assessoria de Parcerias"}, {"sig": "GAB", "nome": "Gabinete"}];
+
+
+// ---- gerar código do processo (PAC-ANO-XXXX) ----
+async function gerarCodigo(ano){
+  try{
+    const rows=await sbGet("/processos?select=codigo&ano=eq."+ano+"&order=id.desc&limit=1");
+    let n=1;
+    if(rows.length&&rows[0].codigo){
+      const m=String(rows[0].codigo).match(/(\d+)$/);
+      if(m)n=parseInt(m[1])+1;
+    }
+    return "PAC-"+ano+"-"+String(n).padStart(4,"0");
+  }catch(e){return "PAC-"+ano+"-0001";}
+}
+
+// ---- cadastrar um processo completo (processo + itens + ações + etapas) ----
+async function cadastrarProcesso(dados){
+  // 1) cria o processo
+  const ano=dados.ano||2026;
+  const codigo=await gerarCodigo(ano);
+  const proc={
+    codigo:codigo, objeto:dados.objeto, num_sei:dados.num_sei||null,
+    modalidade:dados.modalidade||null, valor:dados.valor||0,
+    area_demandante:dados.area_demandante||null, subsecretaria:dados.subsecretaria||null,
+    superintendencia:dados.superintendencia||null, diretoria:dados.diretoria||null, prazo_final:dados.prazo_final||null,
+    prioritario:!!dados.prioritario, tem_contrato:!!dados.tem_contrato, etapa_atual:dados.etapa_atual||"f-etp-e",
+    status:dados.status||"em_andamento", natureza:dados.natureza||"Recorrente", ano:ano, ativo:true
+  };
+  const criado=(await sbPost("processos",proc))[0];
+  const pid=criado.id;
+  // 2) itens
+  if(dados.itens&&dados.itens.length){
+    await sbPost("processo_itens",dados.itens.map(it=>({
+      processo_id:pid, descricao:it.descricao, num_catmas:it.num_catmas||null,
+      quantidade:it.quantidade||null, valor_unitario:it.valor_unitario||null
+    })));
+  }
+  // 3) ações
+  if(dados.acoes&&dados.acoes.length){
+    await sbPost("processo_acoes",dados.acoes.map(a=>({
+      processo_id:pid, codigo_acao:a.codigo_acao, descricao:a.descricao||null
+    })));
+  }
+  // 4) cria as 7 etapas do fluxo (sem a "parado"), status inicial
+  const etapasFluxo=FASES.filter(f=>f.key!=="f-parado").map(f=>({
+    processo_id:pid, fase:f.label, coordenacao:null, versao:1,
+    data_pactuada:null, data_conclusao:null,
+    status: f.key===proc.etapa_atual?"em_andamento":"nao_iniciado", ordem:f.ordem
+  }));
+  await sbPost("etapas",etapasFluxo);
+  return criado;
+}
+
+// ---- carregar processos (com filtro opcional) ----
+async function carregarProcessos(filtro){
+  let q="/processos?select=*&ativo=eq.true&order=id.asc";
+  if(filtro)q+="&"+filtro;
+  return sbGet(q);
+}
+
+// ============================================================
+// AUTENTICAÇÃO (Supabase Auth) — login com senha real
+// ============================================================
+const SB_AUTH=SUPABASE_URL+"/auth/v1";
+let AUTH_TOKEN=null; // access_token da sessão
+let MODO_RECUPERACAO=false; // true quando a pessoa chega pelo link de recuperar senha
+
+// login com e-mail e senha -> devolve token
+async function authLogin(email,senha){
+  const r=await fetch(SB_AUTH+"/token?grant_type=password",{
+    method:"POST",
+    headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({email:email,password:senha})
+  });
+  const data=await r.json();
+  if(!r.ok){throw new Error(data.error_description||data.msg||"E-mail ou senha inválidos.");}
+  AUTH_TOKEN=data.access_token;
+  return data;
+}
+// cabeçalhos autenticados (para chamadas que exigem login)
+function sbAuthHeaders(){
+  return AUTH_TOKEN
+    ? {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+AUTH_TOKEN,"Content-Type":"application/json"}
+    : SB_HEADERS;
+}
+// buscar o perfil do usuário logado (nível, área) via função segura
+async function authPerfil(){
+  const r=await fetch(SB_REST+"/rpc/meu_perfil",{method:"POST",headers:sbAuthHeaders(),body:"{}"});
+  if(!r.ok)throw new Error("Não foi possível carregar seu perfil.");
+  const rows=await r.json();
+  return rows[0]||null;
+}
+// trocar senha (primeiro acesso)
+async function authTrocarSenha(novaSenha){
+  const r=await fetch(SB_AUTH+"/user",{
+    method:"PUT",
+    headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+AUTH_TOKEN,"Content-Type":"application/json"},
+    body:JSON.stringify({password:novaSenha})
+  });
+  const data=await r.json();
+  if(!r.ok)throw new Error(data.error_description||data.msg||"Erro ao trocar senha.");
+  return data;
+}
+function authLogout(){AUTH_TOKEN=null;USUARIO_LOGADO=null;}
+
+// solicitar redefinição de senha (envia e-mail com link)
+async function esqueciSenha(){
+  const email=(document.getElementById('login_email').value||'').trim().toLowerCase();
+  const msg=document.getElementById('login_msg');
+  if(!email){
+    msg.style.display='block';
+    msg.style.background='#fff4e0'; msg.style.color='#b9750a';
+    msg.textContent='Digite seu e-mail no campo acima e clique novamente em "Esqueci minha senha".';
+    return;
+  }
+  if(!email.endsWith('@saude.mg.gov.br')){
+    msg.style.display='block';
+    msg.style.background='#fbe9ee'; msg.style.color='#c0395a';
+    msg.textContent='Use seu e-mail institucional (@saude.mg.gov.br).';
+    return;
+  }
+  try{
+    const r=await fetch(SB_AUTH+"/recover",{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({email:email})
+    });
+    msg.style.display='block';
+    msg.style.background='#e6f5ec'; msg.style.color='#2e8b3d';
+    msg.textContent='Se este e-mail estiver cadastrado, você receberá um link para redefinir a senha. Verifique sua caixa de entrada e o spam.';
+  }catch(e){
+    msg.style.display='block';
+    msg.style.background='#fbe9ee'; msg.style.color='#c0395a';
+    msg.textContent='Não foi possível enviar agora. Tente novamente em alguns minutos ou contate a DCC.';
+  }
+}
+
+</script>
+
+<script>
+  function setGabMode(mode,btn){
+    const list=document.getElementById('gabList');
+    if(mode==='prio')list.classList.add('gab-mode-prio');
+    else list.classList.remove('gab-mode-prio');
+    document.querySelectorAll('#gabSeg button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  function setSubMode(mode,btn){
+    const list=document.getElementById('subList');
+    if(mode==='prio')list.classList.add('sub-mode-prio');
+    else list.classList.remove('sub-mode-prio');
+    document.querySelectorAll('#subSeg button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  function setFocMode(mode,btn){
+    const list=document.getElementById('focList');
+    if(mode==='prio')list.classList.add('foc-mode-prio');
+    else list.classList.remove('foc-mode-prio');
+    document.querySelectorAll('#focSeg button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+  }
+  function showScreen(id,fromPop){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const el=document.getElementById('screen-'+id);
+    if(el)el.classList.add('active');
+    document.querySelectorAll('.demobar button').forEach(b=>b.classList.toggle('on',b.dataset.goto===id));
+    window.scrollTo(0,0);
+    // ao entrar numa tela de lista, recarrega os dados reais
+    if(['gabinete','sub','focal','dcc'].includes(id)&&typeof atualizarListas==='function'){atualizarListas();}
+    if(id==='indicadores'&&typeof calcularIndicadores==='function'){calcularIndicadores();}
+    // integra com o botão Voltar do navegador (History API)
+    if(!fromPop && id!=='login'){
+      try{history.pushState({screen:id},'', '#'+id);}catch(e){}
+    }
+  }
+  // botão voltar do navegador -> volta à tela anterior do sistema
+  window.addEventListener('popstate',function(ev){
+    const scr=(ev.state&&ev.state.screen)||'login';
+    if(scr!=='login')showScreen(scr,true);
+  });
+  // expansão de linha na tabela
+  function toggleExp(el){
+    const row=el.closest('tr');
+    const exp=row.nextElementSibling;
+    const arrow=row.querySelector('.exp-arrow');
+    if(exp&&exp.classList.contains('exp-row')){
+      exp.classList.toggle('open');
+      if(arrow)arrow.classList.toggle('open');
+      // carregar mini-gantt real na primeira expansão
+      if(exp.classList.contains('open')){
+        const cont=exp.querySelector('.mini-gantt-real');
+        if(cont && !cont.dataset.carregado){
+          cont.dataset.carregado='1';
+          const pid=cont.dataset.pid;
+          Promise.all([
+            sbGet('/etapas?processo_id=eq.'+pid+'&select=*&order=ordem.asc'),
+            sbGet('/processos?id=eq.'+pid+'&select=*')
+          ]).then(([etapas,procArr])=>renderGanttEm(cont,etapas,procArr&&procArr[0]))
+            .catch(()=>{cont.innerHTML='<div style="color:var(--faint);font-size:12px">Sem linha do tempo disponível.</div>';});
+        }
+      }
+    }
+  }
+  // gaveta de filtros da DCC
+  const ov=document.getElementById('filtersOverlayDcc');
+  // popular dropdown de fase avançado com fases detalhadas
+  const selFaseAv=document.getElementById('fdcc_fase');
+  if(selFaseAv)selFaseAv.innerHTML='<option value="">Todas</option>'+opcoesFaseDetalhada();
+  // filtro de coordenação (chips)
+  const coordChips=document.getElementById('coordChips');
+  if(coordChips){
+    coordChips.querySelectorAll('.coord').forEach(chip=>{
+      chip.addEventListener('click',()=>{
+        coordChips.querySelectorAll('.coord').forEach(c=>c.classList.remove('on'));
+        chip.classList.add('on');
+        FILTRO_COORD=chip.dataset.coord||'TODAS';
+        atualizarListas();
+      });
+    });
+  }
+  // filtro de prioritário (segmento)
+  const segPrio=document.getElementById('segPrio');
+  if(segPrio){
+    segPrio.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click',()=>{
+        segPrio.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+        b.classList.add('on');
+        FILTRO_PRIO=b.dataset.prio||'todos';
+        atualizarListas();
+      });
+    });
+  }
+  document.getElementById('btnFiltersDcc').addEventListener('click',()=>ov.classList.add('open'));
+  document.getElementById('closeFiltersDcc').addEventListener('click',()=>ov.classList.remove('open'));
+  document.getElementById('applyFiltersDcc').addEventListener('click',()=>{
+    FILTRO_AV={
+      sei:(document.getElementById('fdcc_sei')?.value||'').trim(),
+      area:document.getElementById('fdcc_area')?.value||'',
+      status:document.getElementById('fdcc_status')?.value||'',
+      modal:document.getElementById('fdcc_modal')?.value||'',
+      fase:document.getElementById('fdcc_fase')?.value||'',
+      objeto:(document.getElementById('fdcc_objeto')?.value||'').trim(),
+      catmas:(document.getElementById('fdcc_catmas')?.value||'').trim()
+    };
+    atualizarListas();
+    ov.classList.remove('open');
+  });
+  const clearBtn=document.getElementById('clearFiltersDcc');
+  if(clearBtn){
+    clearBtn.addEventListener('click',()=>{
+      FILTRO_AV={sei:'',area:'',status:'',modal:'',objeto:'',fase:'',catmas:''};
+      ['fdcc_sei','fdcc_area','fdcc_status','fdcc_modal','fdcc_fase','fdcc_objeto','fdcc_catmas'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+      atualizarListas();
+      ov.classList.remove('open');
+    });
+  }
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.classList.remove('open');});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape')ov.classList.remove('open');});
+  // detectar se a pessoa chegou pelo link de recuperação de senha
+  // (o Supabase devolve tokens no "hash" da URL: #access_token=...&type=recovery)
+  (function checarRecuperacao(){
+    const hash=window.location.hash||'';
+    if(hash.indexOf('type=recovery')!==-1 || hash.indexOf('access_token')!==-1){
+      const params=new URLSearchParams(hash.replace(/^#/,''));
+      const token=params.get('access_token');
+      const tipo=params.get('type');
+      if(token && (tipo==='recovery' || tipo===null)){
+        AUTH_TOKEN=token; // sessão de recuperação
+        MODO_RECUPERACAO=true;
+        // limpar o hash da URL (estética/segurança)
+        history.replaceState(null,'',window.location.pathname);
+        // abrir direto a tela de definir nova senha
+        document.getElementById('trocaSenhaOverlay').style.display='flex';
+        return;
+      }
+    }
+    showScreen('login');
+  })();
+  // carregar dados reais do Supabase ao abrir (se houver)
+  if(typeof atualizarListas==='function'){ setTimeout(atualizarListas,300); }
+</script>
+
+<script>
+/* ===== Lógica do cadastro de processos ===== */
+function popularSubsecretarias(){
+  const sel=document.getElementById('c_sub');
+  if(!sel)return;
+  let html='<option value="">— selecione —</option>';
+  html+='<optgroup label="Subsecretarias">'
+    +Object.keys(HIERARQUIA).map(s=>'<option value="'+s+'">'+s+' · '+HIERARQUIA[s].nome+'</option>').join('')
+    +'</optgroup>';
+  html+='<optgroup label="Gabinete / Assessorias / Órgãos">'
+    +ORGAOS_N1.map(o=>'<option value="'+o.sig+'">'+o.sig+' · '+o.nome+'</option>').join('')
+    +'</optgroup>';
+  sel.innerHTML=html;
+}
+function atualizarSupers(){
+  const sub=document.getElementById('c_sub').value;
+  const selS=document.getElementById('c_super');
+  const selD=document.getElementById('c_diretoria');
+  selD.innerHTML='<option value="">— selecione a superintendência —</option>';
+  if(!sub||!HIERARQUIA[sub]){selS.innerHTML='<option value="">— selecione a subsecretaria —</option>';return;}
+  const supers=HIERARQUIA[sub].supers;
+  selS.innerHTML='<option value="">— selecione —</option>'
+    +Object.keys(supers).map(sp=>'<option value="'+sp+'">'+sp+' · '+supers[sp].nome+'</option>').join('');
+}
+function atualizarDiretorias(){
+  const sub=document.getElementById('c_sub').value;
+  const sup=document.getElementById('c_super').value;
+  const selD=document.getElementById('c_diretoria');
+  if(!sub||!sup||!HIERARQUIA[sub]||!HIERARQUIA[sub].supers[sup]){selD.innerHTML='<option value="">— selecione a superintendência —</option>';return;}
+  const dirs=HIERARQUIA[sub].supers[sup].dirs;
+  selD.innerHTML='<option value="">— selecione —</option>'
+    +dirs.map(d=>'<option value="'+d.sig+'">'+d.sig+' · '+d.nome+'</option>').join('');
+}
+function abrirCadastro(){
+  EDITANDO_ID=null;
+  const tituloC=document.querySelector('#cadOverlay h2'); if(tituloC)tituloC.textContent='Cadastrar processo';
+  // popular select de etapas
+  const sel=document.getElementById('c_etapa');
+  sel.innerHTML='<option value="">— selecione —</option>'+opcoesFaseDetalhada();
+  popularSubsecretarias();
+  document.getElementById('c_super').innerHTML='<option value="">— selecione a subsecretaria —</option>';
+  document.getElementById('c_diretoria').innerHTML='<option value="">— selecione a superintendência —</option>';
+  // limpar campos de texto
+  ['c_objeto','c_sei','c_valor','c_prazo'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c_sub').value='';
+  document.getElementById('c_prio').checked=false;
+  document.getElementById('c_contrato').checked=false;
+  document.getElementById('cadItens').innerHTML='';
+  document.getElementById('cadAcoes').innerHTML='';
+  addItemLinha(); addAcaoLinha();
+  const msg=document.getElementById('cadMsg'); msg.style.display='none';
+  document.getElementById('cadOverlay').style.display='flex';
+}
+function fecharCadastro(){document.getElementById('cadOverlay').style.display='none';}
+function addItemLinha(dados){
+  const div=document.createElement('div');
+  div.className='cad-row';
+  div.innerHTML='<input placeholder="Descrição do item" class="it-desc"><input placeholder="CATMAS" class="it-cat"><input placeholder="Qtd" type="number" class="it-qtd"><input placeholder="Valor unit." type="number" class="it-vu"><span class="cad-del" onclick="this.parentElement.remove()">×</span>';
+  document.getElementById('cadItens').appendChild(div);
+  if(dados){
+    div.querySelector('.it-desc').value=dados.descricao||'';
+    div.querySelector('.it-cat').value=dados.num_catmas||'';
+    div.querySelector('.it-qtd').value=dados.quantidade||'';
+    div.querySelector('.it-vu').value=dados.valor_unitario||'';
+  }
+}
+function addAcaoLinha(dados){
+  const div=document.createElement('div');
+  div.className='cad-acao-row';
+  div.innerHTML='<input placeholder="Código (ex.: 4145)" class="ac-cod"><input placeholder="Descrição da ação" class="ac-desc"><span class="cad-del" onclick="this.parentElement.remove()">×</span>';
+  document.getElementById('cadAcoes').appendChild(div);
+  if(dados){
+    div.querySelector('.ac-cod').value=dados.codigo_acao||'';
+    div.querySelector('.ac-desc').value=dados.descricao||'';
+  }
+}
+function cadMostraMsg(txt,tipo){
+  const m=document.getElementById('cadMsg');
+  m.style.display='block'; m.textContent=txt;
+  if(tipo==='erro'){m.style.background='#fbe9ee';m.style.color='#c0395a';}
+  else{m.style.background='#e6f5ec';m.style.color='#2e8b3d';}
+}
+let EDITANDO_ID=null; // se não-nulo, o modal está editando este processo
+async function abrirEdicao(id){
+  try{
+    const arr=await sbGet('/processos?id=eq.'+id+'&select=*');
+    const p=arr[0];
+    if(!p){alert('Processo não encontrado.');return;}
+    EDITANDO_ID=id;
+    // popular etapas e dropdowns
+    const sel=document.getElementById('c_etapa');
+    sel.innerHTML='<option value="">— selecione —</option>'+opcoesFaseDetalhada();
+    popularSubsecretarias();
+    // preencher os campos com os dados atuais
+    document.getElementById('c_objeto').value=p.objeto||'';
+    document.getElementById('c_sei').value=p.num_sei||'';
+    document.getElementById('c_valor').value=p.valor||'';
+    document.getElementById('c_prazo').value=p.prazo_final||'';
+    document.getElementById('c_modal').value=p.modalidade||'';
+    if(document.getElementById('c_nat'))document.getElementById('c_nat').value=p.natureza||'';
+    document.getElementById('c_etapa').value=p.etapa_atual||'f-etp-e';
+    document.getElementById('c_prio').checked=!!p.prioritario;
+    document.getElementById('c_contrato').checked=!!p.tem_contrato;
+    // área: setar subsecretaria, depois super, depois diretoria (encadeado)
+    document.getElementById('c_sub').value=p.subsecretaria||'';
+    atualizarSupers();
+    if(p.superintendencia){document.getElementById('c_super').value=p.superintendencia;atualizarDiretorias();}
+    if(p.diretoria){document.getElementById('c_diretoria').value=p.diretoria;}
+    // itens e ações
+    document.getElementById('cadItens').innerHTML='';
+    document.getElementById('cadAcoes').innerHTML='';
+    const itens=await sbGet('/processo_itens?processo_id=eq.'+id+'&select=*');
+    const acoes=await sbGet('/processo_acoes?processo_id=eq.'+id+'&select=*');
+    if(itens.length)itens.forEach(it=>addItemLinha(it)); else addItemLinha();
+    if(acoes.length)acoes.forEach(a=>addAcaoLinha(a)); else addAcaoLinha();
+    // ajustar título e botão do modal
+    const titulo=document.querySelector('#cadOverlay h2'); if(titulo)titulo.textContent='Editar processo';
+    const btn=document.getElementById('cadSalvar'); btn.textContent='Salvar alterações';
+    const msg=document.getElementById('cadMsg'); if(msg)msg.style.display='none';
+    document.getElementById('cadOverlay').style.display='flex';
+  }catch(e){alert('Erro ao abrir edição: '+e.message);}
+}
+async function salvarCadastro(){
+  const objeto=document.getElementById('c_objeto').value.trim();
+  if(!objeto){cadMostraMsg('Informe o objeto da contratação.','erro');return;}
+  const btn=document.getElementById('cadSalvar');
+  btn.disabled=true; btn.textContent='Salvando...';
+  // coletar itens
+  const itens=[...document.querySelectorAll('#cadItens .cad-row')].map(r=>({
+    descricao:r.querySelector('.it-desc').value.trim(),
+    num_catmas:r.querySelector('.it-cat').value.trim(),
+    quantidade:parseFloat(r.querySelector('.it-qtd').value)||null,
+    valor_unitario:parseFloat(r.querySelector('.it-vu').value)||null
+  })).filter(it=>it.descricao);
+  // coletar ações
+  const acoes=[...document.querySelectorAll('#cadAcoes .cad-acao-row')].map(r=>({
+    codigo_acao:r.querySelector('.ac-cod').value.trim(),
+    descricao:r.querySelector('.ac-desc').value.trim()
+  })).filter(a=>a.codigo_acao);
+  const dados={
+    objeto:objeto,
+    num_sei:document.getElementById('c_sei').value.trim(),
+    modalidade:document.getElementById('c_modal').value,
+    valor:parseFloat(document.getElementById('c_valor').value)||0,
+    prazo_final:document.getElementById('c_prazo').value.trim(),
+    subsecretaria:document.getElementById('c_sub').value.trim(),
+    superintendencia:document.getElementById('c_super').value.trim(),
+    diretoria:document.getElementById('c_diretoria').value.trim(),
+    area_demandante:document.getElementById('c_diretoria').value.trim()||document.getElementById('c_super').value.trim(),
+    natureza:document.getElementById('c_nat').value,
+    etapa_atual:document.getElementById('c_etapa').value,
+    prioritario:document.getElementById('c_prio').checked,
+    tem_contrato:document.getElementById('c_contrato').checked,
+    itens:itens, acoes:acoes, ano:2026
+  };
+  try{
+    if(EDITANDO_ID){
+      // MODO EDIÇÃO: atualiza o processo existente
+      await sbPatch('processos','id=eq.'+EDITANDO_ID,{
+        objeto:dados.objeto, num_sei:dados.num_sei||null, modalidade:dados.modalidade||null,
+        valor:dados.valor||null, prazo_final:dados.prazo_final||null,
+        subsecretaria:dados.subsecretaria||null, superintendencia:dados.superintendencia||null,
+        diretoria:dados.diretoria||null, area_demandante:dados.area_demandante||null,
+        etapa_atual:dados.etapa_atual, prioritario:dados.prioritario, tem_contrato:dados.tem_contrato
+      });
+      // regravar itens e ações (apaga os antigos e insere os atuais)
+      await sbDelete('processo_itens','processo_id=eq.'+EDITANDO_ID);
+      await sbDelete('processo_acoes','processo_id=eq.'+EDITANDO_ID);
+      for(const it of itens){await sbPost('processo_itens',{...it,processo_id:EDITANDO_ID});}
+      for(const a of acoes){await sbPost('processo_acoes',{...a,processo_id:EDITANDO_ID});}
+      cadMostraMsg('Processo atualizado com sucesso!','ok');
+      btn.disabled=false; btn.textContent='Salvar alterações';
+      if(typeof atualizarListas==='function')atualizarListas();
+      setTimeout(fecharCadastro,1200);
+      return;
+    }
+    const criado=await cadastrarProcesso(dados);
+    cadMostraMsg('Processo '+criado.codigo+' cadastrado com sucesso!','ok');
+    btn.disabled=false; btn.textContent='Salvar processo';
+    if(typeof atualizarListas==='function')atualizarListas();
+    setTimeout(fecharCadastro,1500);
+  }catch(e){
+    cadMostraMsg('Erro ao salvar: '+e.message,'erro');
+    btn.disabled=false; btn.textContent=EDITANDO_ID?'Salvar alterações':'Salvar processo';
+  }
+}
+</script>
+<script>
+/* ===== Renderização das listas com dados reais do Supabase ===== */
+const FASE_LABEL=Object.fromEntries(FASES.map(f=>[f.key,f.label]));
+function statusBadge(st){
+  const map={em_andamento:['run','Em andamento'],em_atraso:['late','Em atraso'],concluido:['ok','Concluído'],nao_iniciado:['run','Não iniciado'],aguardando_validacao:['pend','Aguard. validação']};
+  const[cls,txt]=map[st]||['run',st||'Em andamento'];
+  return '<span class="st '+cls+'">'+txt+'</span>';
+}
+function fmtValor(v){return v?('R$ '+Number(v).toLocaleString('pt-BR')):'—';}
+
+function linhaProcesso(p){
+  const prio=p.prioritario?'row-prio':'nao-prio';
+  const estrela=p.prioritario?'<span class="prio-star">★</span>':'';
+  const area=(p.subsecretaria||'')+(p.superintendencia?' › '+p.superintendencia:'');
+  const etapa=FASE_LABEL[p.etapa_atual]||p.etapa_atual||'—';
+  return '<tr class="row-main '+prio+'" onclick="toggleExp(this)">'
+    +'<td><span class="exp-arrow">▸</span></td>'
+    +'<td class="obj-cell">'+estrela+(p.objeto||'')+'</td>'
+    +'<td>'+(area||'—')+'</td>'
+    +'<td>'+etapa+'</td>'
+    +'<td>'+(p.prazo_final||'—')+'</td>'
+    +'<td>'+(p.prazo_final||'—')+'</td>'
+    +'<td>'+statusBadge(p.status)+'</td>'
+    +'<td><span class="info-dot" onclick="event.stopPropagation();abrirProcesso('+p.id+')">i</span></td>'
+    +'</tr>'
+    +'<tr class="exp-row"><td colspan="8"><div class="exp-inner">'
+    +'<div class="last-obs"><div class="oh">Processo '+(p.codigo||'')+'</div>'
+    +'Valor: '+fmtValor(p.valor)+' · SEI: '+(p.num_sei||'—')+'</div>'
+    +'<div class="mini-gantt-real" data-pid="'+p.id+'" style="margin-top:14px"><div style="color:var(--faint);font-size:12px">Carregando linha do tempo…</div></div>'
+    +'<div style="margin-top:12px;display:flex;gap:8px">'
+    +'<button onclick="event.stopPropagation();excluirProcesso('+p.id+',\''+(p.codigo||'')+'\')" style="background:#fff;border:1px solid #f0c0cc;color:#c0395a;border-radius:8px;padding:6px 14px;font-size:12px;font-weight:700;cursor:pointer">Excluir processo</button>'
+    +'</div>'
+    +'</div></td></tr>';
+}
+
+async function excluirProcesso(id,codigo){
+  if(!confirm('Excluir o processo '+codigo+'? Esta ação não pode ser desfeita.'))return;
+  try{
+    await sbDelete('processos','id=eq.'+id);
+    atualizarListas();
+  }catch(e){alert('Erro ao excluir: '+e.message);}
+}
+
+async function atualizarListas(){
+  try{
+    let procs=await carregarProcessos();
+    if(!procs||!procs.length)return; // mantém exemplos se banco vazio
+    // filtrar por escopo do usuário logado
+    if(USUARIO_LOGADO){
+      const u=USUARIO_LOGADO;
+      const SUBS=['SUBRAS','SUBVS','SUBASS','SUBGF','SUBR'];
+      if(u.nivel==='ponto_focal'){
+        // ordem de especificidade: diretoria > superintendência > subsecretaria/órgão
+        if(u.diretoria && !SUBS.includes(u.diretoria)){
+          procs=procs.filter(p=>p.diretoria===u.diretoria);
+        }else if(u.superintendencia && !SUBS.includes(u.superintendencia)){
+          procs=procs.filter(p=>p.superintendencia===u.superintendencia);
+        }else if(u.subsecretaria){
+          // vinculado a uma subsecretaria inteira OU a um órgão de nível 1 (área fica em subsecretaria)
+          procs=procs.filter(p=>p.subsecretaria===u.subsecretaria);
+        }else if(u.superintendencia && SUBS.includes(u.superintendencia)){
+          procs=procs.filter(p=>p.subsecretaria===u.superintendencia);
+        }else if(u.diretoria && SUBS.includes(u.diretoria)){
+          procs=procs.filter(p=>p.subsecretaria===u.diretoria);
+        }
+      }else if(u.nivel==='subsecretario'&&u.subsecretaria){
+        procs=procs.filter(p=>p.subsecretaria===u.subsecretaria);
+      }
+      // gabinete e dcc veem todos
+    }
+    const linhas=procs.map(linhaProcesso).join('');
+    // Gabinete, Ponto Focal, Subsecretaria: mesma listagem (filtro por área vem com o Auth)
+    ['#screen-gabinete','#screen-focal','#screen-sub'].forEach(sel=>{
+      const body=document.querySelector(sel+' tbody');
+      if(body)body.innerHTML=linhas;
+    });
+    // contadores reais
+    const total=procs.length;
+    const atraso=procs.filter(p=>p.status==='em_atraso').length;
+    const prio=procs.filter(p=>p.prioritario).length;
+    const hoje=new Date(); hoje.setHours(0,0,0,0);
+    const em30=new Date(hoje); em30.setDate(em30.getDate()+30);
+    const vencem30=procs.filter(p=>{
+      if(!p.prazo_final)return false;
+      const pf=new Date(p.prazo_final+'T00:00:00');
+      return pf>=hoje && pf<=em30;
+    }).length;
+    const pendVal=procs.filter(p=>p.status==='aguardando_validacao').length;
+    const setKpi=(sel,val)=>{const el=document.querySelector(sel);if(el)el.textContent=val;};
+    setKpi('#screen-gabinete .kpi.k1 .val',total);
+    setKpi('#screen-gabinete .kpi.k2 .val',atraso);
+    setKpi('#screen-gabinete .kpi.k3 .val',vencem30);
+    setKpi('#screen-sub .kpi.k1 .val',total);
+    setKpi('#screen-sub .kpi.k2 .val',atraso);
+    setKpi('#screen-sub .kpi.k3 .val',vencem30);
+    setKpi('#screen-focal .kpi.k1 .val',total);
+    setKpi('#screen-focal .kpi.k2 .val',atraso);
+    setKpi('#screen-focal .kpi.k3 .val',vencem30);
+    setKpi('#screen-dcc .kpi.k1 .val',total);
+    setKpi('#screen-dcc .kpi.k2 .val',atraso);
+    setKpi('#screen-dcc .kpi.k3 .val',atraso);
+    setKpi('#screen-dcc .kpi.k4 .val',pendVal);
+    // DCC lista todos, com filtros de coordenação e prioritário
+    const dccBody=document.querySelector('#screen-dcc tbody');
+    if(dccBody){
+      let procsDcc=procs.slice();
+      if(FILTRO_COORD && FILTRO_COORD!=='TODAS'){
+        procsDcc=procsDcc.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
+      }
+      if(FILTRO_PRIO==='sim') procsDcc=procsDcc.filter(p=>p.prioritario);
+      else if(FILTRO_PRIO==='nao') procsDcc=procsDcc.filter(p=>!p.prioritario);
+      // filtros avançados
+      if(FILTRO_AV.sei) procsDcc=procsDcc.filter(p=>(p.num_sei||'').toLowerCase().includes(FILTRO_AV.sei.toLowerCase()));
+      if(FILTRO_AV.area) procsDcc=procsDcc.filter(p=>p.subsecretaria===FILTRO_AV.area);
+      if(FILTRO_AV.status) procsDcc=procsDcc.filter(p=>p.status===FILTRO_AV.status);
+      if(FILTRO_AV.modal) procsDcc=procsDcc.filter(p=>p.modalidade===FILTRO_AV.modal);
+      if(FILTRO_AV.fase) procsDcc=procsDcc.filter(p=>p.etapa_atual===FILTRO_AV.fase);
+      if(FILTRO_AV.objeto) procsDcc=procsDcc.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
+      dccBody.innerHTML=procsDcc.map(linhaProcessoDCC).join('');
+    }
+  }catch(e){console.warn('Não foi possível carregar processos:',e.message);}
+}
+let FILTRO_COORD='TODAS';
+let FILTRO_PRIO='todos';
+let FILTRO_AV={sei:'',area:'',status:'',modal:'',objeto:'',fase:'',catmas:''};
+let PROC_ATUAL=null;
+let USUARIO_LOGADO=null;
+async function fazerLogin(){
+  const email=document.getElementById('login_email').value.trim().toLowerCase();
+  const senha=document.getElementById('login_senha').value;
+  const msg=document.getElementById('login_msg');
+  msg.style.display='none';
+  if(!email||!senha){msg.style.display='block';msg.textContent='Informe e-mail e senha.';return;}
+  if(!email.endsWith('@saude.mg.gov.br')){msg.style.display='block';msg.textContent='Use seu e-mail institucional (@saude.mg.gov.br).';return;}
+  try{
+    // 1) autentica com senha (Supabase Auth)
+    await authLogin(email,senha);
+    // 2) busca o perfil (nível, área) de forma segura
+    const perfil=await authPerfil();
+    if(!perfil){msg.style.display='block';msg.textContent='Seu acesso ainda não foi configurado. Contate a DCC.';return;}
+    USUARIO_LOGADO=perfil;
+    // 3) primeiro acesso? obriga a trocar a senha
+    if(perfil.precisa_trocar_senha){
+      abrirTrocaSenha();
+      return;
+    }
+    // 4) roteia conforme o nível
+    const destino={gabinete:'gabinete',subsecretario:'sub',ponto_focal:'focal',dcc:'dcc'}[perfil.nivel]||'gabinete';
+    aplicarUsuarioNasTelas();
+    showScreen(destino);
+  }catch(e){
+    msg.style.display='block';
+    msg.textContent=e.message;
+  }
+}
+function abrirTrocaSenha(){
+  document.getElementById('trocaSenhaOverlay').style.display='flex';
+}
+async function confirmarTrocaSenha(){
+  const s1=document.getElementById('ts_senha1').value;
+  const s2=document.getElementById('ts_senha2').value;
+  const m=document.getElementById('ts_msg');
+  m.style.display='none';
+  if(!s1||s1.length<6){m.style.display='block';m.textContent='A senha deve ter ao menos 6 caracteres.';return;}
+  if(s1!==s2){m.style.display='block';m.textContent='As senhas não coincidem.';return;}
+  try{
+    await authTrocarSenha(s1);
+    // se chegou pelo link de recuperação, ainda não temos o perfil: buscar agora
+    if(!USUARIO_LOGADO){
+      USUARIO_LOGADO=await authPerfil();
+    }
+    if(USUARIO_LOGADO){
+      // marca que já trocou a senha via função segura do banco
+      try{
+        await fetch(SB_REST+"/rpc/marcar_senha_trocada",{
+          method:"POST",
+          headers:sbAuthHeaders(),
+          body:"{}"
+        });
+      }catch(err){console.warn('Erro ao marcar troca de senha:',err);}
+      USUARIO_LOGADO.precisa_trocar_senha=false;
+    }
+    document.getElementById('trocaSenhaOverlay').style.display='none';
+    MODO_RECUPERACAO=false;
+    if(USUARIO_LOGADO){
+      const destino={gabinete:'gabinete',subsecretario:'sub',ponto_focal:'focal',dcc:'dcc'}[USUARIO_LOGADO.nivel]||'gabinete';
+      aplicarUsuarioNasTelas();
+      showScreen(destino);
+    }else{
+      // fallback: manda para o login com a senha nova
+      showScreen('login');
+    }
+  }catch(e){m.style.display='block';m.textContent=e.message;}
+}
+function aplicarUsuarioNasTelas(){
+  if(!USUARIO_LOGADO)return;
+  const u=USUARIO_LOGADO;
+  document.querySelectorAll('#screen-focal .role-tag').forEach(el=>el.textContent='Ponto Focal · '+(u.superintendencia||''));
+  document.querySelectorAll('#screen-sub .role-tag').forEach(el=>el.textContent=u.subsecretaria||'Subsecretaria/Assessoria');
+}
+function voltarDaPagina(){
+  const destino=USUARIO_LOGADO?({gabinete:'gabinete',subsecretario:'sub',ponto_focal:'focal',dcc:'dcc'}[USUARIO_LOGADO.nivel]||'gabinete'):'login';
+  showScreen(destino);
+}
+async function abrirProcesso(id){
+  showScreen('processo');
+  try{
+    const proc=(await sbGet('/processos?id=eq.'+id+'&select=*'))[0];
+    if(!proc)return;
+    PROC_ATUAL=proc;
+    const setTxt=(elid,txt)=>{const e=document.getElementById(elid);if(e)e.textContent=txt;};
+    setTxt('pp_objeto',proc.objeto||'—');
+    // role-tag do topo = nível do usuário logado
+    const rt=document.getElementById('pp_roletag');
+    if(rt&&USUARIO_LOGADO){const nomes={gabinete:'Gabinete',subsecretario:'Subsecretário',ponto_focal:'Ponto Focal',dcc:'DCC'};rt.textContent=nomes[USUARIO_LOGADO.nivel]||'';}
+    const badgePrio=document.getElementById('pp_prio');
+    if(badgePrio)badgePrio.style.display=proc.prioritario?'':'none';
+    setTxt('pp_sei',proc.num_sei||'—');
+    setTxt('pp_modal',proc.modalidade||'—');
+    setTxt('pp_valor',fmtValor(proc.valor));
+    setTxt('pp_codigo',proc.codigo||'—');
+    setTxt('pp_area',(proc.subsecretaria||'')+(proc.superintendencia?' › '+proc.superintendencia:'')||'—');
+    setTxt('pp_prazo',proc.prazo_final||'—');
+    setTxt('pp_contrato',proc.tem_contrato?'Sim':'Não');
+    // incluir diretoria no caminho da área, se houver
+    if(proc.diretoria){setTxt('pp_area',(proc.subsecretaria||'')+(proc.superintendencia?' › '+proc.superintendencia:'')+' › '+proc.diretoria);}
+    const prioEl=document.getElementById('pp_prio');
+    if(prioEl)prioEl.style.display=proc.prioritario?'inline-flex':'none';
+    // itens
+    const itens=await sbGet('/processo_itens?processo_id=eq.'+id+'&select=*&order=id.asc');
+    const tb=document.getElementById('pp_itens');
+    if(tb){
+      if(itens.length){
+        let tot=0;
+        tb.innerHTML=itens.map(it=>{
+          const vt=(it.quantidade||0)*(it.valor_unitario||0); tot+=vt;
+          return '<tr><td>'+(it.descricao||'')+'</td><td class="mono">'+(it.num_catmas||'—')+'</td>'
+            +'<td class="num">'+(it.quantidade||'—')+'</td><td class="num">'+fmtValor(it.valor_unitario)+'</td>'
+            +'<td class="num">'+fmtValor(vt)+'</td></tr>';
+        }).join('');
+        setTxt('pp_totitens',itens.length);
+        setTxt('pp_totvalor',fmtValor(tot||proc.valor));
+      }else{
+        tb.innerHTML='<tr><td colspan="5" style="color:var(--faint);text-align:center;padding:16px">Nenhum item cadastrado</td></tr>';
+        setTxt('pp_totitens','0'); setTxt('pp_totvalor',fmtValor(proc.valor));
+      }
+    }
+    // ações
+    const acoes=await sbGet('/processo_acoes?processo_id=eq.'+id+'&select=*&order=id.asc');
+    setTxt('pp_acoes',acoes.length?acoes.map(a=>a.codigo_acao+(a.descricao?' · '+a.descricao:'')).join('   ·   '):'—');
+    // etapas -> timeline
+    const etapas=await sbGet('/etapas?processo_id=eq.'+id+'&select=*&order=ordem.asc');
+    PROC_ATUAL._etapas=etapas;
+    // popular select de atualização
+    const selUp=document.getElementById('up_etapa');
+    if(selUp){
+      selUp.innerHTML='<option value="">Vincular a qual etapa?</option>'
+        +etapas.map(et=>'<option value="'+et.id+'">'+et.fase+' (v'+(et.versao||1)+')</option>').join('');
+    }
+    renderTimeline(etapas,'todas');
+    // resumos semanais reais
+    await carregarResumos(id);
+    renderGantt(etapas);
+  }catch(e){console.warn('Erro ao abrir processo:',e.message);}
+}
+let TL_ETAPAS=[];
+function renderTimeline(etapas,filtro){
+  if(etapas)TL_ETAPAS=etapas;
+  const tl=document.getElementById('pp_timeline');
+  if(!tl)return;
+  const concluidos=['concluido','concluida'];
+  let lista=TL_ETAPAS;
+  if(filtro==='concluidas')lista=TL_ETAPAS.filter(e=>concluidos.includes(e.status));
+  else if(filtro==='pendentes')lista=TL_ETAPAS.filter(e=>!concluidos.includes(e.status));
+  const stMap={
+    concluido:['st-ok','CONCLUÍDO'],concluida:['st-ok','CONCLUÍDO'],
+    em_andamento:['st-run','EM ANDAMENTO'],
+    em_atraso:['st-late','EM ATRASO'],
+    nao_iniciado:['st-none','NÃO INICIADO'],nao_iniciada:['st-none','NÃO INICIADO']
+  };
+  const fmtd=d=>d?d.split('-').reverse().join('/'):null;
+  if(!lista.length){tl.innerHTML='<div style="color:var(--faint);font-size:13px;padding:12px">Nenhuma etapa nesse filtro.</div>';return;}
+  tl.innerHTML=lista.map(et=>{
+    const[cls,txt]=stMap[et.status]||['st-none','NÃO INICIADO'];
+    const ent=fmtd(et.data_entrada), sai=fmtd(et.data_saida), ret=fmtd(et.data_retorno);
+    let linhaDatas='';
+    if(ent||sai||ret){
+      const partes=[];
+      if(ent)partes.push('entrada '+ent);
+      if(sai)partes.push('saída '+sai);
+      if(ret)partes.push('retorno '+ret);
+      linhaDatas='<span class="tl-pact">'+partes.join(' · ')+'</span>';
+    }else{linhaDatas='<span class="tl-pact">sem datas</span>';}
+    const obs=et.observacao?'<div style="font-size:11.5px;color:var(--muted);margin-top:6px;font-style:italic">"'+et.observacao+'"</div>':'';
+    return '<div class="tl-item"><div class="tl-date '+cls+'"><span class="d">'+(et.ordem||'')+'</span><span class="m">v'+(et.versao||1)+'</span></div>'
+      +'<div class="tl-card"><h4>'+(et.fase||'')+'</h4>'
+      +linhaDatas+'<span class="tl-status">• '+txt+'</span>'
+      +(et.coordenacao?'<div style="font-size:11px;color:var(--faint);margin-top:4px">Coordenação: '+et.coordenacao+'</div>':'')
+      +obs
+      +'</div></div>';
+  }).join('');
+}
+function filtrarTimeline(filtro,el){
+  document.querySelectorAll('#tlChips .tl-chip').forEach(c=>c.classList.remove('on'));
+  if(el)el.classList.add('on');
+  renderTimeline(null,filtro);
+}
+function renderGantt(etapas){
+  const cont=document.getElementById('pp_gantt_real');
+  if(!cont)return;
+  renderGanttResumo(cont,etapas,PROC_ATUAL);
+}
+// cache dos prazos por modalidade (carregado sob demanda)
+let PRAZOS_CACHE=null;
+async function carregarPrazos(){
+  if(PRAZOS_CACHE)return PRAZOS_CACHE;
+  try{
+    const rows=await sbGet('/prazos_fase?select=fase,dias_normal,dias_prioritario,ordem,modalidades(sigla)&order=ordem.asc');
+    PRAZOS_CACHE={};
+    rows.forEach(r=>{
+      const sig=r.modalidades&&r.modalidades.sigla; if(!sig)return;
+      PRAZOS_CACHE[sig]=PRAZOS_CACHE[sig]||[];
+      PRAZOS_CACHE[sig].push({fase:r.fase,normal:r.dias_normal,prio:r.dias_prioritario,ordem:r.ordem});
+    });
+  }catch(e){PRAZOS_CACHE={};}
+  return PRAZOS_CACHE;
+}
+// mapa modalidade (nome do processo) -> sigla da tabela de prazos
+function siglaModalidade(m){
+  if(!m)return null;
+  const s=(''+m).toLowerCase();
+  if(s.includes('registro de pre'))return 'PE-RP';
+  if(s.includes('pregão')||s.includes('pregao'))return 'PE';
+  if(s.includes('dispensa'))return 'DISP';
+  if(s.includes('inexig'))return 'INEX';
+  if(s.includes('cotep')||s.includes('cotação')||s.includes('cotacao'))return 'COTEP';
+  if(s.includes('concorr'))return 'CONC';
+  if(s.includes('adesão')||s.includes('adesao')||s.includes('carona'))return 'ADESAO';
+  if(s.includes('credenc'))return 'CRED';
+  return null;
+}
+// projeta a data de término: hoje + soma dos prazos das fases que FALTAM
+async function calcularProjecao(proc,etapas){
+  const prazos=await carregarPrazos();
+  const sig=siglaModalidade(proc.modalidade);
+  const lista=sig&&prazos[sig]?prazos[sig]:null;
+  if(!lista||!lista.length)return null; // sem prazos dessa modalidade
+  const prio=!!proc.prioritario;
+  // fase atual = última etapa com data_entrada (a mais recente)
+  const comData=etapas.filter(e=>e.data_entrada).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+  const faseAtual=comData.length?comData[comData.length-1].fase:(proc.etapa_atual||'');
+  // achar posição da fase atual na lista de prazos
+  let idx=lista.findIndex(p=>p.fase===faseAtual);
+  if(idx<0)idx=0; // se não achar, considera desde o início
+  // somar dias das fases que faltam (da atual, inclusive, em diante)
+  let diasRestantes=0;
+  for(let i=idx;i<lista.length;i++){
+    if(lista[i].fase==='Outros')continue; // "Outros" não conta no prazo
+    diasRestantes+=(prio?lista[i].prio:lista[i].normal)||0;
+  }
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const fimProj=new Date(hoje); fimProj.setDate(fimProj.getDate()+diasRestantes);
+  return {fimProj,diasRestantes,temPrazos:true};
+}
+// Gantt resumido: 3 barras (planejado x executado x projetado)
+async function renderGanttResumo(cont,etapas,proc){
+  if(!cont)return;
+  const comData=etapas.filter(e=>e.data_entrada);
+  if(!comData.length){cont.innerHTML='<div style="color:var(--faint);font-size:13px;padding:12px">Sem datas registradas para montar o gráfico.</div>';return;}
+  const DAY=1000*60*60*24;
+  const dias=(a,b)=>Math.round((b-a)/DAY);
+  const inicio=new Date(Math.min(...comData.map(e=>new Date(e.data_entrada+'T00:00:00'))));
+  const fins=comData.map(e=>new Date((e.data_retorno||e.data_saida||e.data_entrada)+'T00:00:00'));
+  const fimExec=new Date(Math.max(...fins));
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const concluido=proc&&(proc.status==='concluido');
+  // PLANEJADO: prazo_final do processo (meta)
+  let fimPlan=null;
+  if(proc&&proc.prazo_final)fimPlan=new Date(proc.prazo_final+'T00:00:00');
+  // PROJETADO: hoje + soma das fases que faltam (calculado dos prazos reais)
+  let fimProj=null, semPrazos=false;
+  if(concluido){ fimProj=fimExec; }
+  else{
+    const proj=await calcularProjecao(proc,etapas);
+    if(proj&&proj.temPrazos)fimProj=proj.fimProj;
+    else{ fimProj=hoje; semPrazos=true; }
+  }
+  // barras: {label, ini, fim, cor}
+  const barras=[
+    {label:'Planejado',ini:inicio,fim:fimPlan,cor:'#7c6cf0',claro:'rgba(124,108,240,.5)'},
+    {label:'Executado',ini:inicio,fim:fimExec,cor:'#e879a6',claro:'rgba(232,121,166,.85)'},
+    {label:'Projetado',ini:inicio,fim:fimProj,cor:'#f6b878',claro:'rgba(246,184,120,.9)'}
+  ].filter(b=>b.fim);
+  // range temporal total (para a régua)
+  const todasDatas=[inicio,...barras.map(b=>b.fim)];
+  let minD=new Date(Math.min(...todasDatas)), maxD=new Date(Math.max(...todasDatas));
+  // margem de meio mês nas pontas
+  minD=new Date(minD.getFullYear(),minD.getMonth(),1);
+  maxD=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
+  const span=Math.max(1,dias(minD,maxD));
+  const pos=d=>((d-minD)/DAY)/span*100;
+  const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
+  // régua de meses
+  const meses=[]; let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+  while(cur<=maxD){ meses.push(new Date(cur)); cur=new Date(cur.getFullYear(),cur.getMonth()+1,1); }
+  const mesLbl=d=>d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+(d.getMonth()===0?'/'+d.toLocaleDateString('pt-BR',{year:'2-digit'}):'');
+  let regua='<div style="position:relative;height:16px;margin-left:92px;margin-bottom:6px">';
+  meses.forEach(m=>{ regua+='<span style="position:absolute;left:'+pos(m)+'%;font-size:10px;color:var(--faint);transform:translateX(-2px)">'+mesLbl(m)+'</span>'; });
+  regua+='</div>';
+  // linhas verticais de grade (meses) + linha "hoje"
+  let grade='<div style="position:absolute;left:92px;right:0;top:22px;bottom:26px;pointer-events:none">';
+  meses.forEach(m=>{ grade+='<div style="position:absolute;left:'+pos(m)+'%;top:0;bottom:0;width:1px;background:var(--line2)"></div>'; });
+  if(hoje>=minD&&hoje<=maxD)grade+='<div style="position:absolute;left:'+pos(hoje)+'%;top:0;bottom:0;width:1px;background:#c0395a;opacity:.5"></div><span style="position:absolute;left:'+pos(hoje)+'%;bottom:-16px;font-size:9.5px;color:#c0395a;transform:translateX(-50%)">hoje</span>';
+  grade+='</div>';
+  // barras posicionadas na régua
+  function barraHTML(b){
+    const left=pos(b.ini), width=Math.max(1.2,pos(b.fim)-pos(b.ini));
+    const nd=dias(b.ini,b.fim);
+    return '<div style="display:flex;align-items:center;gap:0;margin-bottom:9px">'
+      +'<div style="width:88px;font-size:11px;font-weight:700;color:var(--muted);text-align:right;flex:none;padding-right:4px">'+b.label+'</div>'
+      +'<div style="flex:1;height:20px;position:relative">'
+      +'<div style="position:absolute;left:'+left+'%;width:'+width+'%;top:0;bottom:0;background:'+b.claro+';border-radius:6px" title="'+fmt(b.ini)+' a '+fmt(b.fim)+' ('+nd+' dias)"></div>'
+      +'<span style="position:absolute;left:calc('+(left+width)+'% + 6px);top:2px;font-size:9.5px;color:var(--faint);white-space:nowrap">'+fmt(b.fim)+'</span>'
+      +'</div></div>';
+  }
+  let html='<div style="position:relative">';
+  html+=regua+grade;
+  html+=barras.map(barraHTML).join('');
+  html+='</div>';
+  // resumo textual (atraso projetado)
+  if(fimPlan&&fimProj&&!concluido){
+    const atraso=dias(fimPlan,fimProj);
+    if(atraso>0)html+='<div style="margin-top:8px;font-size:12px;color:#c0395a;font-weight:600">Projeção ultrapassa o planejado em '+atraso+' dias (término previsto: '+fmt(fimProj)+')</div>';
+    else html+='<div style="margin-top:8px;font-size:12px;color:#2a9d6f;font-weight:600">Dentro do prazo planejado (projeção: '+fmt(fimProj)+')</div>';
+  }
+  if(semPrazos)html+='<div style="margin-top:8px;font-size:11px;color:var(--faint)">Projeção indisponível: prazos não definidos para esta modalidade.</div>';
+  // legenda
+  html+='<div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted);flex-wrap:wrap">'
+    +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(124,108,240,.5);vertical-align:middle;margin-right:5px"></span>Planejado</span>'
+    +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(232,121,166,.85);vertical-align:middle;margin-right:5px"></span>Executado</span>'
+    +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(246,184,120,.9);vertical-align:middle;margin-right:5px"></span>Projetado</span>'
+    +'</div>';
+  cont.innerHTML=html;
+}
+// mini-gantt (listas): mesmo visual de 3 barras com régua, versão compacta
+async function renderGanttEm(cont,etapas,proc){
+  return renderGanttResumo(cont,etapas,proc);
+}
+async function carregarResumos(pid){
+  const cont=document.getElementById('pp_resumos');
+  if(!cont)return;
+  try{
+    const rs=await sbGet('/resumos_semanais?processo_id=eq.'+pid+'&select=*&order=semana_inicio.desc');
+    if(!rs.length){cont.innerHTML='<div style="color:var(--faint);font-size:13px;text-align:center;padding:16px">Nenhum resumo registrado ainda.</div>';return;}
+    const fmtD=d=>d?d.split('-').reverse().join('/'):'';
+    let html='<div class="week-now"><div class="wh"><span class="wtag">◆ Último resumo · '+fmtD(rs[0].semana_inicio)+' a '+fmtD(rs[0].semana_fim)+'</span></div>'
+      +'<div class="wtxt">'+(rs[0].texto||'')+'</div><div class="wby">por '+(rs[0].autor_email||'—')+'</div></div>';
+    if(rs.length>1){
+      html+='<div class="week-hist" style="margin-top:12px">'+rs.slice(1).map(r=>
+        '<div class="week-item"><div class="wk">'+fmtD(r.semana_inicio)+' a '+fmtD(r.semana_fim)+'</div><div class="wc">'+(r.texto||'')+'</div></div>'
+      ).join('')+'</div>';
+    }
+    cont.innerHTML=html;
+  }catch(e){cont.innerHTML='<div style="color:var(--faint);font-size:13px;text-align:center;padding:16px">Não foi possível carregar os resumos.</div>';}
+}
+function abrirResumo(){
+  if(!PROC_ATUAL){alert('Abra um processo primeiro.');return;}
+  const texto=prompt('Resumo desta semana:');
+  if(!texto||!texto.trim())return;
+  salvarResumo(texto.trim());
+}
+async function salvarResumo(texto){
+  // calcula segunda e sexta da semana atual
+  const hoje=new Date();
+  const dia=hoje.getDay();
+  const seg=new Date(hoje); seg.setDate(hoje.getDate()-((dia+6)%7));
+  const sex=new Date(seg); sex.setDate(seg.getDate()+4);
+  const iso=d=>d.toISOString().slice(0,10);
+  try{
+    await sbPost('resumos_semanais',{
+      processo_id:PROC_ATUAL.id, semana_inicio:iso(seg), semana_fim:iso(sex),
+      texto:texto, autor_email:'sistema@saude.mg.gov.br'
+    });
+    carregarResumos(PROC_ATUAL.id);
+  }catch(e){alert('Erro ao salvar resumo: '+e.message);}
+}
+
+function upMsg(txt,tipo){
+  const m=document.getElementById('up_msg');
+  m.style.display='block'; m.textContent=txt;
+  if(tipo==='erro'){m.style.background='#fbe9ee';m.style.color='#c0395a';}
+  else{m.style.background='#e6f5ec';m.style.color='#2e8b3d';}
+}
+async function salvarAtualizacao(){
+  if(!PROC_ATUAL){upMsg('Abra um processo primeiro.','erro');return;}
+  const etapaId=document.getElementById('up_etapa').value;
+  if(!etapaId){upMsg('Selecione a etapa alvo.','erro');return;}
+  const novoStatus=document.getElementById('up_status').value;
+  const obs=document.getElementById('up_obs').value.trim();
+  const tipo=document.getElementById('up_tipo').value;
+  const dtConc=document.getElementById('up_dtconc').value||null;
+  const tend=document.getElementById('up_tend').value||null;
+  const sinal=[...document.querySelectorAll('.up_sinal:checked')].map(c=>c.value).join(',');
+  const etapa=(PROC_ATUAL._etapas||[]).find(e=>String(e.id)===String(etapaId));
+  const versaoAtual=etapa?etapa.versao||1:1;
+  // se for "retorno", a versão da etapa incrementa (vai-e-volta)
+  const novaVersao= tipo==='retorno' ? versaoAtual+1 : versaoAtual;
+  const btn=document.getElementById('up_salvar');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    // 1) grava a atualização (histórico)
+    await sbPost('atualizacoes',{
+      processo_id:PROC_ATUAL.id, etapa_id:parseInt(etapaId), tipo:tipo,
+      observacao:obs||null, data_conclusao:dtConc, nova_tendencia:tend,
+      versao:novaVersao, autor_email:'sistema@saude.mg.gov.br', sinalizar_para:sinal||null
+    });
+    // 2) atualiza a etapa (status, versão, data de conclusão)
+    const patch={status:novoStatus, versao:novaVersao};
+    if(dtConc)patch.data_conclusao=dtConc;
+    await sbPatch('etapas','id=eq.'+etapaId,patch);
+    // 3) se a etapa foi concluída, processo fica aguardando validação da DCC
+    if(novoStatus==='concluido'){
+      await sbPatch('processos','id=eq.'+PROC_ATUAL.id,{status:'aguardando_validacao'});
+    }
+    upMsg('Atualização registrada com sucesso!','ok');
+    // limpar campos
+    document.getElementById('up_obs').value='';
+    document.getElementById('up_dtconc').value='';
+    document.getElementById('up_tend').value='';
+    document.querySelectorAll('.up_sinal:checked').forEach(c=>c.checked=false);
+    btn.disabled=false; btn.textContent='Salvar atualização';
+    // recarregar a página do processo para refletir
+    setTimeout(()=>abrirProcesso(PROC_ATUAL.id),1000);
+  }catch(e){
+    upMsg('Erro ao salvar: '+e.message,'erro');
+    btn.disabled=false; btn.textContent='Salvar atualização';
+  }
+}
+async function calcularIndicadores(){
+  try{
+    const procs=await carregarProcessos();
+    const total=procs.length;
+    const atraso=procs.filter(p=>p.status==='em_atraso').length;
+    const noPrazo=total-atraso;
+    const setTxt=(id,txt)=>{const e=document.getElementById(id);if(e)e.innerHTML=txt;};
+    setTxt('ind_total',total);
+    setTxt('ind_situacao','<span style="color:#2e9b5e">'+noPrazo+' no prazo</span> · <span style="color:#d6456a">'+atraso+' atrasados</span>');
+    // gráfico: processos por coordenação atual (pela fase detalhada de cada um)
+    const coordsList=['CAP','COA','CL','CFCO'];
+    const cont={'CAP':0,'COA':0,'CL':0,'CFCO':0,'Sem coord.':0};
+    procs.forEach(p=>{
+      const c=coordDoProcesso(p);
+      if(c&&cont[c]!==undefined)cont[c]++;
+      else cont['Sem coord.']++;
+    });
+    const chaves=[...coordsList,'Sem coord.'].filter(k=>cont[k]>0||coordsList.includes(k));
+    const maxv=Math.max(1,...Object.values(cont));
+    const bars=document.getElementById('ind_bars');
+    if(bars){
+      bars.innerHTML=chaves.map(k=>{
+        const v=cont[k]||0; const h=Math.round(v/maxv*100);
+        return '<div class="bar-col"><div class="bar-val">'+v+'</div><div class="bar-fill" style="height:'+h+'%"></div><div class="bar-label">'+k+'</div></div>';
+      }).join('');
+    }
+    // retrabalho de TR: contar REPETIÇÕES de fases de TR por processo (histórico real)
+    // uma "volta" = a mesma fase de TR aparecendo mais de uma vez no processo
+    const etapasTR=await sbGet('/etapas?select=processo_id,fase&fase=like.TR*');
+    const trPorProc={}; // processo_id -> {fase: contagem}
+    etapasTR.forEach(e=>{
+      if(!trPorProc[e.processo_id])trPorProc[e.processo_id]={};
+      trPorProc[e.processo_id][e.fase]=(trPorProc[e.processo_id][e.fase]||0)+1;
+    });
+    const retrPorProc={};
+    Object.keys(trPorProc).forEach(pid=>{
+      // repetições = soma de (contagem - 1) para cada fase que apareceu +1 vez
+      let rep=0;
+      Object.values(trPorProc[pid]).forEach(c=>{if(c>1)rep+=c-1;});
+      retrPorProc[pid]=rep;
+    });
+    // montar tabela: só processos COM retrabalho, ordenados do maior para o menor
+    const linhas=procs.map(p=>({p:p,n:retrPorProc[p.id]||0})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n);
+    const body=document.getElementById('ind_retr_body');
+    if(body){
+      if(!linhas.length){body.innerHTML='<tr><td colspan="3" style="text-align:center;color:var(--faint);padding:16px">Nenhum processo com retrabalho de TR registrado.</td></tr>';}
+      else body.innerHTML=linhas.map(({p,n})=>{
+        const cls=n>=3?'high':(n>=1?'mid':'low');
+        const area=(p.subsecretaria||'')+(p.superintendencia?' › '+p.superintendencia:'')+(p.diretoria?' › '+p.diretoria:'');
+        return '<tr><td style="font-weight:600">'+(p.objeto||'')+'</td><td>'+(area||'—')+'</td>'
+          +'<td style="text-align:center"><span class="retr-badge '+cls+'">'+n+'</span></td></tr>';
+      }).join('');
+    }
+    // média geral: total de voltas dividido pelos processos que passaram por TR
+    const procsComTR=new Set(etapasTR.map(e=>e.processo_id)).size;
+    const somaRetr=Object.values(retrPorProc).reduce((a,b)=>a+b,0);
+    const media=procsComTR?(somaRetr/procsComTR):0;
+    setTxt('ind_retr_media',media.toFixed(1).replace('.',','));
+  }catch(e){console.warn('Erro ao calcular indicadores:',e.message);}
+}
+function linhaProcessoDCC(p){
+  const estrela=p.prioritario?'<span class="prio-star">★</span>':'';
+  const area=(p.subsecretaria||'')+(p.superintendencia?' › '+p.superintendencia:'');
+  const etapa=FASE_LABEL[p.etapa_atual]||p.etapa_atual||'—';
+  const pendente=p.status==='aguardando_validacao';
+  const stCell=pendente?'<span class="st pend">Pendente</span>':statusBadge(p.status);
+  const acao=pendente
+    ?'<span class="validate-btn" onclick="event.stopPropagation();validarProcesso('+p.id+')">✓ Validar</span><span class="info-dot" onclick="abrirProcesso('+p.id+')">i</span>'
+    :'<span class="info-dot" onclick="abrirProcesso('+p.id+')">i</span>';
+  const excluir='<span class="del-dot" title="Excluir" onclick="event.stopPropagation();excluirProcesso('+p.id+",'"+(p.codigo||'')+"'"+')" style="cursor:pointer;color:#c0395a;font-weight:800;margin-left:8px">✕</span>';
+  const editar='<span class="edit-dot" title="Editar" onclick="event.stopPropagation();abrirEdicao('+p.id+')" style="cursor:pointer;color:var(--grad-a);font-weight:800;margin-left:8px">✎</span>';
+  return '<tr class="row-main"><td class="obj-cell">'+estrela+(p.objeto||'')+'</td>'
+    +'<td class="mono">'+(p.num_sei||'—')+'</td><td>'+(area||'—')+'</td>'
+    +'<td>'+(p.modalidade||'—')+'</td><td>'+etapa+'</td>'
+    +'<td>'+(p.prazo_final||'—')+'</td><td>'+(p.prazo_final||'—')+'</td>'
+    +'<td>'+stCell+'</td>'
+    +'<td><div class="acts">'+acao+editar+excluir+'</div></td></tr>';
+}
+async function validarProcesso(id){
+  if(!confirm('Confirmar a validação deste avanço?'))return;
+  try{
+    await sbPatch('processos','id=eq.'+id,{status:'em_andamento'});
+    atualizarListas();
+  }catch(e){alert('Erro ao validar: '+e.message);}
+}
+
+</script>
+</body>
+</html>
