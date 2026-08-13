@@ -1,0 +1,11 @@
+# Só o index.html vai para a web.
+#
+# O repositorio guarda os .sql com os processos reais, o historico e os
+# e-mails dos usuarios. Sem este arquivo, o Vercel publicaria todos eles
+# como endereços acessíveis (ex.: /BACKUP_COMPLETO_ESTRUTURA.sql).
+#
+# A regra é "bloqueia tudo, libera só o index.html": qualquer arquivo
+# novo que a gente criar fica fora da web automaticamente.
+
+*
+!index.html
