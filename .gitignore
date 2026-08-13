@@ -1,0 +1,5 @@
+# pasta de trabalho do assistente (exports, rascunhos)
+.claude/
+
+# exports do Supabase baixados para conferência
+*.csv
