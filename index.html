@@ -1701,7 +1701,13 @@ let PROCESSOS_CARREGADOS=[];
 async function atualizarListas(){
   try{
     let procs=await carregarProcessos();
-    if(!procs||!procs.length)return; // mantém exemplos se banco vazio
+    if(!procs||!procs.length){
+      // o comentário antigo dizia "mantém exemplos se banco vazio", mas as
+      // linhas de exemplo não existem mais — ficava só a tabela em branco.
+      PROCESSOS_CARREGADOS=[];
+      mostrarListaVazia();
+      return;
+    }
     PROCESSOS_CARREGADOS=procs;
     // filtrar por escopo do usuário logado
     if(USUARIO_LOGADO){
@@ -1776,7 +1782,44 @@ async function atualizarListas(){
       if(FILTRO_AV.objeto) procsDcc=procsDcc.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
       dccBody.innerHTML=procsDcc.map(linhaProcessoDCC).join('');
     }
-  }catch(e){console.warn('Não foi possível carregar processos:',e.message);}
+  }catch(e){
+    // Antes isto era só um console.warn: a lista ficava vazia sem dizer por
+    // quê, e uma falta de permissão parecia "o banco está sem dados".
+    console.warn('Não foi possível carregar processos:',e.message);
+    mostrarFalhaNasListas(e.message);
+  }
+}
+
+// Nenhum processo no escopo do usuário — diferente de "deu erro".
+function mostrarListaVazia(){
+  const html='<tr><td colspan="9" style="padding:0">'
+    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+    + '<div class="empty-tile"><i data-lucide="inbox"></i></div>'
+    + '<p>Nenhum processo disponível para o seu acesso.</p>'
+    + '</div></td></tr>';
+  ['#screen-gabinete','#screen-sub','#screen-focal','#screen-dcc'].forEach(sel=>{
+    const body=document.querySelector(sel+' tbody');
+    if(body) body.innerHTML=html;
+  });
+  if(window.desenharIcones) window.desenharIcones();
+}
+
+// Escreve o erro na própria tabela, na tela em que a pessoa está.
+function mostrarFalhaNasListas(detalhe){
+  const html='<tr><td colspan="9" style="padding:0">'
+    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+    + '<div class="empty-tile" style="background:#fef2f2;color:#dc2626"><i data-lucide="wifi-off"></i></div>'
+    + '<p style="color:#dc2626">Não foi possível carregar os processos.</p>'
+    + '<p style="font-weight:600;color:var(--faint);margin-top:6px;max-width:460px">'
+    + sanitize(detalhe||'') + '</p>'
+    + '<p style="font-weight:600;color:var(--faint);margin-top:10px">'
+    + 'Tente recarregar a página. Se continuar, avise a DCC.</p>'
+    + '</div></td></tr>';
+  ['#screen-gabinete','#screen-sub','#screen-focal','#screen-dcc'].forEach(sel=>{
+    const body=document.querySelector(sel+' tbody');
+    if(body) body.innerHTML=html;
+  });
+  if(window.desenharIcones) window.desenharIcones();
 }
 let FILTRO_COORD='TODAS';
 let FILTRO_PRIO='todos';

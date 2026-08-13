@@ -168,6 +168,15 @@ revoke all on processos, processo_itens, processo_acoes, etapas,
               prazos_fase, modalidades, feriados
   from anon;
 
+-- Zera também o que 'authenticated' tenha recebido em concessões amplas
+-- (ex.: "grant ... on all tables in schema public to authenticated"),
+-- senão as permissões largas sobrevivem a este script e as tabelas de
+-- referência continuariam graváveis por qualquer usuário logado.
+revoke all on processos, processo_itens, processo_acoes, etapas,
+              atualizacoes, resumos_semanais, usuarios,
+              prazos_fase, modalidades, feriados
+  from authenticated;
+
 grant select, insert, update, delete
   on processos, processo_itens, processo_acoes, etapas,
      atualizacoes, resumos_semanais
@@ -175,6 +184,7 @@ grant select, insert, update, delete
 
 grant select, update on usuarios to authenticated;
 grant select on prazos_fase, modalidades, feriados to authenticated;
+grant usage, select on all sequences in schema public to authenticated;
 
 -- 5) PROCESSOS ------------------------------------------------
 -- leitura: só o que o escopo do usuário alcança
