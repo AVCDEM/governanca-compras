@@ -2467,40 +2467,45 @@ function projetarPelaCalculadora(proc,etapas,fimExec){
   const previstoTotal=fluxo.reduce((a,b)=>a+b.dias,0);
 
   // Etapa mais AVANCADA do processo que existe no fluxo previsto.
-  // Antes era so a ultima registrada, e um findIndex que falhava caia em
-  // idx=0 -> projetava o processo inteiro, jogando fora o que ja andou.
-  // Etapa fora da calculadora ("Outros" e as que a DCC ainda nao mapeou)
-  // e DESVIO: nao avanca nem retrocede o progresso.
+  // Etapa fora da calculadora e desvio: nao avanca nem retrocede.
   const comData=etapas.filter(e=>e.data_entrada);
   let idx=-1, etapaAtual=null;
   comData.forEach(e=>{
     const i=fluxo.findIndex(x=>x.fase===e.fase);
     if(i>idx){ idx=i; etapaAtual=e; }
   });
-  // nenhuma etapa reconhecida: melhor nao mostrar projecao do que inventar
   if(idx<0) return {previstoTotal,diasRestantes:null,fimProj:null,partida:null,
                     fluxo,faseAtual:null,semReferencia:true};
 
   const hoje=new Date(); hoje.setHours(0,0,0,0);
-
-  // A etapa atual conta so o que FALTA dela. Se ja consumiu os dias
-  // previstos, contribui com zero (esta atrasada, nao ganha prazo novo).
   const passo=fluxo[idx];
   const entrouEm=new Date(etapaAtual.data_entrada+'T00:00:00');
-  const gastos=Math.max(0,Math.round((hoje-entrouEm)/DIA));
-  const restaDaAtual=Math.max(0,passo.dias-gastos);
-  const depois=fluxo.slice(idx+1).reduce((a,b)=>a+b.dias,0);
-  const diasRestantes=restaDaAtual+depois;
 
-  // parado nao anda sozinho: a projecao parte de hoje (ou do fim do
-  // executado, se ele for mais recente que hoje)
-  const partida=(fimExec&&fimExec>hoje)?new Date(fimExec):hoje;
-  const fimProj=new Date(partida); fimProj.setDate(fimProj.getDate()+diasRestantes);
+  // A PROJECAO SAI DA ETAPA ATUAL, nao de hoje.
+  //   termino previsto = inicio da etapa atual
+  //                    + o que ela realmente vai consumir
+  //                    + os dias previstos das etapas seguintes
+  // "O que ela vai consumir" e o previsto; se ja estourou, e o decorrido.
+  // Assim uma etapa de 10 dias que ja esta em 20 empurra o termino em 10
+  // dias, em vez de reiniciar a contagem a partir de hoje.
+  const decorridoNaAtual=Math.max(0,Math.round((hoje-entrouEm)/DIA));
+  const consumoDaAtual=Math.max(passo.dias,decorridoNaAtual);
+  const diasDepois=fluxo.slice(idx+1).reduce((a,b)=>a+b.dias,0);
 
+  const fimProj=new Date(entrouEm);
+  fimProj.setDate(fimProj.getDate()+consumoDaAtual+diasDepois);
+
+  // a barra comeca na etapa atual, para continuar o executado em vez de
+  // aparecer solta la na frente
+  const partida=entrouEm;
+  const diasRestantes=Math.max(0,Math.round((fimProj-hoje)/DIA));
+  const atrasoDaAtual=Math.max(0,decorridoNaAtual-passo.dias);
   const desvios=comData.filter(e=>!fluxo.some(x=>x.fase===e.fase)).length;
+
   return {previstoTotal,diasRestantes,fimProj,partida,fluxo,
           faseAtual:passo.fase, etapasRestantes:fluxo.length-idx,
-          diasDaAtual:passo.dias, restaDaAtual, desvios, semReferencia:false};
+          diasDaAtual:passo.dias, decorridoNaAtual, atrasoDaAtual,
+          diasDepois, desvios, semReferencia:false};
 }
 
 // Gantt resumido: 3 barras (planejado x executado x projetado)
@@ -2544,12 +2549,12 @@ async function renderGanttResumo(cont,etapas,proc){
      dica:'Periodo ja percorrido, pelas datas registradas nas etapas'},
     {label:'Projetado',ini:inicioProj,  fim:fimProj,cor:'#f58220',claro:'rgba(245,130,32,.72)',
      dica:(calc&&!calc.semReferencia)
-       ? ('Faltam '+calc.diasRestantes+' dias'
-          +'\nEtapa atual: '+calc.faseAtual
-          +'\n'+(calc.restaDaAtual>0?('restam '+calc.restaDaAtual+' de '+calc.diasDaAtual+' dias dela')
-                                        :('ja passou dos '+calc.diasDaAtual+' dias previstos dela'))
-          +'\n+ '+(calc.etapasRestantes-1)+' etapas depois'
-          +(calc.desvios?('\n'+calc.desvios+' etapa(s) fora da calculadora, contadas como desvio'):''))
+       ? ('Etapa atual: '+calc.faseAtual
+          +'\nprevista em '+calc.diasDaAtual+' dias, ja em '+calc.decorridoNaAtual
+          +(calc.atrasoDaAtual>0?(' (\u002b'+calc.atrasoDaAtual+' dias)'):'')
+          +'\n+ '+calc.diasDepois+' dias das '+(calc.etapasRestantes-1)+' etapas seguintes'
+          +'\nTermino previsto em '+calc.diasRestantes+' dias'
+          +(calc.desvios?('\n'+calc.desvios+' etapa(s) fora da calculadora, ignoradas'):''))
        : ''}
   ].filter(b=>b.fim && b.fim>=b.ini);
   // range temporal total (para a régua)
@@ -2561,17 +2566,33 @@ async function renderGanttResumo(cont,etapas,proc){
   const span=Math.max(1,dias(minD,maxD));
   const pos=d=>((d-minD)/DAY)/span*100;
   const fmt=d=>d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
-  // régua de meses
-  const meses=[]; let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
-  while(cur<=maxD){ meses.push(new Date(cur)); cur=new Date(cur.getFullYear(),cur.getMonth()+1,1); }
-  const mesLbl=d=>d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','')+(d.getMonth()===0?'/'+d.toLocaleDateString('pt-BR',{year:'2-digit'}):'');
+  // Regua adaptativa: com processos de 2 a 3 anos, um rotulo por mes vira
+  // uma tarja ilegivel. O passo cresce com a duracao total.
+  const totalMeses=(maxD.getFullYear()-minD.getFullYear())*12+(maxD.getMonth()-minD.getMonth())+1;
+  const passo = totalMeses<=14 ? 1 : totalMeses<=36 ? 3 : totalMeses<=72 ? 6 : 12;
+  const marcos=[]; let cur=new Date(minD.getFullYear(),minD.getMonth(),1);
+  while(cur<=maxD){ marcos.push(new Date(cur)); cur=new Date(cur.getFullYear(),cur.getMonth()+passo,1); }
+  const MES3=['jan','abr','jul','out'];
+  function rotulo(d){
+    if(passo>=12) return String(d.getFullYear());
+    const mes=d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+    const ano=String(d.getFullYear()).slice(2);
+    // com passo trimestral ou maior, o ano entra em todo rotulo
+    return (passo>=3 || d.getMonth()===0) ? mes+'/'+ano : mes;
+  }
   let regua='<div style="position:relative;height:16px;margin-left:92px;margin-bottom:6px">';
-  meses.forEach(m=>{ regua+='<span style="position:absolute;left:'+pos(m)+'%;font-size:10px;color:var(--faint);transform:translateX(-2px)">'+mesLbl(m)+'</span>'; });
+  marcos.forEach(m=>{ regua+='<span style="position:absolute;left:'+pos(m)+'%;font-size:10px;font-weight:700;color:var(--faint);transform:translateX(-50%);white-space:nowrap">'+rotulo(m)+'</span>'; });
   regua+='</div>';
-  // linhas verticais de grade (meses) + linha "hoje"
+  // grade vertical + linha de hoje
   let grade='<div style="position:absolute;left:92px;right:0;top:22px;bottom:26px;pointer-events:none">';
-  meses.forEach(m=>{ grade+='<div style="position:absolute;left:'+pos(m)+'%;top:0;bottom:0;width:1px;background:var(--line2)"></div>'; });
-  if(hoje>=minD&&hoje<=maxD)grade+='<div style="position:absolute;left:'+pos(hoje)+'%;top:0;bottom:0;width:1px;background:#dc2626;opacity:.5"></div><span style="position:absolute;left:'+pos(hoje)+'%;bottom:-16px;font-size:9.5px;color:#dc2626;transform:translateX(-50%)">hoje</span>';
+  marcos.forEach(m=>{ grade+='<div style="position:absolute;left:'+pos(m)+'%;top:0;bottom:0;width:1px;background:var(--line2)"></div>'; });
+  if(hoje>=minD&&hoje<=maxD){
+    const ph=pos(hoje);
+    // o rotulo "hoje" ia por cima da barra quando caia na borda direita
+    const alinha = ph>92 ? 'right:0;transform:none' : 'left:'+ph+'%;transform:translateX(-50%)';
+    grade+='<div style="position:absolute;left:'+ph+'%;top:0;bottom:0;width:1px;background:#dc2626;opacity:.55"></div>'
+         + '<span style="position:absolute;'+alinha+';bottom:-17px;font-size:9px;font-weight:900;color:#dc2626;text-transform:uppercase;letter-spacing:.06em">hoje</span>';
+  }
   grade+='</div>';
   // barras posicionadas na régua
   function barraHTML(b){
