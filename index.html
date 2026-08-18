@@ -171,8 +171,8 @@
   .who .sair{color:var(--faint);font-weight:700;cursor:pointer;font-size:12.5px;display:inline-flex;align-items:center;gap:5px}
   .who .sair:hover{color:var(--sys-deep)}
 
-  .wrap{max-width:1400px;margin:0 auto;padding:26px 34px 70px}
-  .wrap.wide{max-width:1400px}
+  .wrap{max-width:1680px;margin:0 auto;padding:24px 22px 70px}
+  .wrap.wide{max-width:1680px}
 
   /* KPIs */
   .kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 0 24px}
@@ -191,6 +191,7 @@
   .kpi.clickable{cursor:pointer;transition:all .2s}
   .kpi.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
   .kpi .tagclick{font-size:9px;color:var(--sys-deep);font-weight:900;margin-top:3px;text-transform:uppercase;letter-spacing:.08em}
+  .kpi.kpi-ativo{border-color:var(--sys);box-shadow:0 0 0 2px rgba(141,198,63,.35),var(--shadow-md)}
 
   /* barra de filtros — pill é o único controle de filtro */
   .filt-bar{background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);padding:16px 20px;margin-bottom:24px}
@@ -273,8 +274,12 @@
   .foc-mode-prio .nao-prio{display:none}
   .foc-mode-prio .nao-prio + .exp-row{display:none}
   /* ==== página do processo ==== */
-  .back{display:inline-flex;align-items:center;gap:7px;color:var(--faint);font-weight:900;font-size:10px;text-transform:uppercase;letter-spacing:.12em;margin-bottom:16px;cursor:pointer;transition:color .2s}
-  .back:hover{color:var(--sys-deep)}
+  /* botao voltar: era so um texto cinza e passava despercebido */
+  .back{display:inline-flex;align-items:center;gap:8px;color:var(--body);font-weight:900;font-size:11px;
+    text-transform:uppercase;letter-spacing:.1em;margin-bottom:18px;cursor:pointer;transition:all .2s;
+    background:#fff;border:1px solid var(--line2);border-radius:999px;padding:10px 18px;box-shadow:var(--shadow)}
+  .back:hover{color:var(--sys-deep);border-color:var(--sys);transform:translateX(-3px);box-shadow:var(--shadow-md)}
+  .back svg{width:15px;height:15px}
   /* cabeçalho de entidade: onda temática pelo eixo, corpo branco sobreposto */
   .proc-hero{position:relative;overflow:hidden;border-radius:28px 28px 0 0;background:linear-gradient(135deg,var(--ses-blue),var(--ses-darkblue));padding:26px 32px 40px}
   .proc-hero.eixo-ses{background:linear-gradient(135deg,var(--ses-orange),var(--ses-darkorange))}
@@ -422,7 +427,7 @@
   /* ==== telas estreitas — degradação por etapas (1280 / 1000 / 760 / 560) ==== */
   @media(max-width:1280px){
     .kpis.four{grid-template-columns:repeat(2,1fr)}
-    .wrap{padding:22px 24px 60px}
+    .wrap{padding:22px 18px 60px}
   }
   @media(max-width:1000px){
     .kpis{grid-template-columns:repeat(2,1fr)}
@@ -431,12 +436,12 @@
     .hero{padding:22px 24px}
     /* tabela larga rola dentro do próprio card, nunca a página */
     .listwrap{overflow-x:auto}
-    .listwrap table{min-width:940px}
+    .listwrap table{min-width:1120px}
   }
   @media(max-width:760px){
     .topbar{padding:12px 20px;flex-wrap:wrap;gap:10px}
     .who{gap:10px}
-    .wrap{padding:18px 16px 56px}
+    .wrap{padding:18px 12px 56px}
     .kpis,.kpis.four,.ind-grid{grid-template-columns:1fr}
     .hero{padding:20px 22px;border-radius:24px}
     .hero h1{font-size:23px}
@@ -760,8 +765,8 @@
     <div class="kpis four">
       <div class="kpi k1"><div class="ktile"><i data-lucide="layers"></i></div><div><div class="lbl">Processos no PAC</div><div class="val tnum">148</div></div></div>
       <div class="kpi k2"><div class="ktile"><i data-lucide="alert-triangle"></i></div><div><div class="lbl">Em atraso</div><div class="val tnum">23</div></div></div>
-      <div class="kpi k3 clickable"><div class="ktile"><i data-lucide="flag"></i></div><div><div class="lbl">Notificar área</div><div class="val tnum">14</div><div class="tagclick">clique para filtrar</div></div></div>
-      <div class="kpi k4 clickable"><div class="ktile"><i data-lucide="check-circle-2"></i></div><div><div class="lbl">Pendentes de validação</div><div class="val tnum">6</div><div class="tagclick">clique para filtrar</div></div></div>
+      <div class="kpi k3 clickable" onclick="filtrarPorKpi('em_atraso')" data-tip="Filtra os processos em atraso"><div class="ktile"><i data-lucide="flag"></i></div><div><div class="lbl">Notificar área</div><div class="val tnum">0</div><div class="tagclick" id="kpi-tag-atraso">clique para filtrar</div></div></div>
+      <div class="kpi k4 clickable" onclick="filtrarPorKpi('aguardando_validacao')" data-tip="Filtra os processos que a área concluiu e aguardam sua validação"><div class="ktile"><i data-lucide="check-circle-2"></i></div><div><div class="lbl">Pendentes de validação</div><div class="val tnum">0</div><div class="tagclick" id="kpi-tag-validacao">clique para filtrar</div></div></div>
     </div>
     <div class="filt-bar">
       <div class="filt-row">
@@ -769,14 +774,14 @@
         <div class="seg" id="segPrio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
         <span class="filt-sep"></span>
         <span class="filt-lbl">Coordenação</span>
-        <div class="coord-chips" id="coordChips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span></div>
+        <div class="coord-chips" id="coordChips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
         <button class="filt-btn" id="btnFiltersDcc"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
       </div>
     </div>
     <div class="listwrap">
       <table style="table-layout:fixed">
-        <colgroup><col style="width:20%"><col style="width:118px"><col style="width:96px"><col style="width:74px"><col style="width:110px"><col style="width:88px"><col style="width:86px"><col style="width:126px"><col style="width:126px"></colgroup>
-        <thead><tr style="font-size:10px"><th style="font-size:10px">Objeto</th><th style="font-size:10px">Nº SEI</th><th style="font-size:10px">Área</th><th style="font-size:10px">Modal.</th><th style="font-size:10px">Etapa</th><th style="font-size:10px">Prazo etapa</th><th style="font-size:10px">Prazo final</th><th style="font-size:10px">Status</th><th></th></tr></thead>
+        <colgroup><col style="width:24%"><col style="width:158px"><col style="width:104px"><col style="width:154px"><col style="width:156px"><col style="width:104px"><col style="width:104px"><col style="width:128px"><col style="width:116px"></colgroup>
+        <thead><tr><th>Objeto</th><th>Nº SEI</th><th>Área</th><th>Modalidade</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th></th></tr></thead>
         <tbody>
 </tbody>
       </table>
@@ -847,58 +852,174 @@
   </div>
 </div>
 
-<!-- ===== MODAL DE CADASTRO ===== -->
-<div id="cadOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.35);z-index:80;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 16px">
-  <div style="background:#fff;border-radius:20px;max-width:760px;width:100%;box-shadow:0 30px 80px -20px rgba(15,23,42,.5);margin:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 26px;border-bottom:1px solid var(--line)">
-      <h2 style="font-size:19px;font-weight:800;color:var(--ink)">Cadastrar processo</h2>
-      <span onclick="fecharCadastro()" class="modal-x"><i data-lucide="x"></i></span>
+<!-- ===== MODAL DE CADASTRO / EDIÇÃO (duas etapas) ===== -->
+<div id="cadOverlay" class="cad-overlay">
+  <div class="cad-modal">
+
+    <!-- cabeçalho fixo, com o passo a passo -->
+    <div class="cad-head">
+      <div class="cad-head-top">
+        <h2 id="cadTitulo">Cadastrar processo</h2>
+        <span onclick="fecharCadastro()" class="modal-x" title="Fechar"><i data-lucide="x"></i></span>
+      </div>
+      <div class="cad-passos">
+        <button type="button" class="cad-passo on" id="cadPasso1" onclick="irParaEtapa(1)">
+          <span class="n">1</span> Dados do processo
+        </button>
+        <span class="cad-passo-linha"></span>
+        <button type="button" class="cad-passo" id="cadPasso2" onclick="irParaEtapa(2)">
+          <span class="n">2</span> Itens e ações
+        </button>
+      </div>
     </div>
-    <div style="padding:24px 26px">
-      <div id="cadMsg" style="display:none;margin-bottom:16px;padding:11px 15px;border-radius:10px;font-size:13px;font-weight:600"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px 18px">
-        <div style="grid-column:1/-1"><label class="cad-l">Objeto da contratação *</label><input id="c_objeto" class="cad-i" placeholder="Ex.: Aquisição de câmaras de conservação"></div>
-        <div><label class="cad-l">Nº SEI</label><input id="c_sei" class="cad-i" placeholder="1320.01.XXXXXXX/2026-XX"></div>
-        <div><label class="cad-l">Modalidade</label><select id="c_modal" class="cad-i"><option value="">— selecione —</option><option>Pregão Eletrônico</option><option>Pregão Eletrônico para Registro de Preços</option><option>Dispensa</option><option>Inexigibilidade</option><option>COTEP</option><option>Concorrência</option><option>Adesão</option><option>Credenciamento</option></select></div>
-        <div><label class="cad-l">Valor previsto (R$)</label><input id="c_valor" class="cad-i" type="number" placeholder="Ex.: 50000000"></div>
-        <div><label class="cad-l">Prazo final desejado</label><input id="c_prazo" class="cad-i" placeholder="Ex.: Agosto/2026"></div>
-        <div><label class="cad-l">Subsecretaria</label><select id="c_sub" class="cad-i" onchange="atualizarSupers()"><option value="">— selecione —</option></select></div>
-        <div><label class="cad-l">Superintendência</label><select id="c_super" class="cad-i" onchange="atualizarDiretorias()"><option value="">— selecione a subsecretaria —</option></select></div>
-        <div><label class="cad-l">Diretoria</label><select id="c_diretoria" class="cad-i"><option value="">— selecione a superintendência —</option></select></div>
-        <div><label class="cad-l">Natureza</label><select id="c_nat" class="cad-i"><option>Recorrente</option><option>Extraordinária</option></select></div>
-        <div><label class="cad-l">Etapa atual</label><select id="c_etapa" class="cad-i"></select></div>
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;margin-top:2px"><input id="c_prio" type="checkbox" style="width:17px;height:17px;accent-color:var(--sys)"><label for="c_prio" style="font-size:13.5px;font-weight:600;color:var(--ink)">Marcar como prioritário</label></div>
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:9px;margin-top:2px"><input id="c_contrato" type="checkbox" style="width:17px;height:17px;accent-color:var(--sys)"><label for="c_contrato" style="font-size:13.5px;font-weight:600;color:var(--ink)">Este processo tem contrato</label></div>
+
+    <!-- corpo rolável -->
+    <div class="cad-body">
+      <div id="cadMsg" class="form-msg"></div>
+
+      <!-- ETAPA 1 -->
+      <div id="cadEtapa1" class="cad-etapa">
+        <div class="cad-grid">
+          <div class="col-2"><label class="cad-l">Objeto da contratação *</label><input id="c_objeto" class="cad-i" placeholder="Ex.: Aquisição de câmaras de conservação"></div>
+          <div><label class="cad-l">Nº SEI</label><input id="c_sei" class="cad-i" placeholder="1320.01.XXXXXXX/2026-XX"></div>
+          <div><label class="cad-l">Modalidade</label><select id="c_modal" class="cad-i"><option value="">— selecione —</option><option>Pregão Eletrônico</option><option>Pregão Eletrônico para Registro de Preços</option><option>Dispensa</option><option>Inexigibilidade</option><option>COTEP</option><option>Concorrência</option><option>Adesão</option><option>Credenciamento</option></select></div>
+          <div><label class="cad-l">Valor previsto (R$)</label><input id="c_valor" class="cad-i" type="number" step="0.01" min="0" placeholder="Ex.: 50000000"></div>
+          <div><label class="cad-l">Prazo final desejado</label><input id="c_prazo" class="cad-i" type="date"></div>
+          <div><label class="cad-l">Natureza</label><select id="c_nat" class="cad-i"><option>Recorrente</option><option>Extraordinária</option></select></div>
+          <div><label class="cad-l">Etapa atual</label><select id="c_etapa" class="cad-i"></select></div>
+        </div>
+
+        <div class="cad-secao">
+          <span class="cad-secao-t">Área demandante</span>
+          <div class="cad-grid">
+            <div><label class="cad-l">Subsecretaria</label><select id="c_sub" class="cad-i" onchange="atualizarSupers()"><option value="">— selecione —</option></select></div>
+            <div><label class="cad-l">Superintendência</label><select id="c_super" class="cad-i" onchange="atualizarDiretorias()"><option value="">— selecione a subsecretaria —</option></select></div>
+            <div class="col-2"><label class="cad-l">Diretoria</label><select id="c_diretoria" class="cad-i"><option value="">— selecione a superintendência —</option></select></div>
+          </div>
+        </div>
+
+        <div class="cad-secao">
+          <label class="cad-check"><input id="c_prio" type="checkbox"> Marcar como prioritário</label>
+          <label class="cad-check"><input id="c_contrato" type="checkbox"> Este processo tem contrato</label>
+        </div>
       </div>
 
-      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line2)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800">Itens do processo</span><button onclick="addItemLinha()" style="background:none;border:1.5px solid var(--sys-deep);color:var(--sys-deep);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:800;cursor:pointer"><i data-lucide="plus"></i> item</button></div>
-        <div id="cadItens"></div>
-      </div>
+      <!-- ETAPA 2 -->
+      <div id="cadEtapa2" class="cad-etapa" style="display:none">
+        <div class="cad-secao-lista">
+          <div class="cad-secao-head">
+            <span class="cad-secao-t">Itens do processo</span>
+            <button type="button" onclick="addItemLinha()" class="btn-outline"><i data-lucide="plus"></i> item</button>
+          </div>
+          <div class="cad-cab-itens">
+            <span>Descrição</span><span>CATMAS</span><span>Qtd.</span><span>Valor unit.</span><span></span>
+          </div>
+          <div id="cadItens"></div>
+        </div>
 
-      <div style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line2)">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><span style="font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:800">Ações orçamentárias</span><button onclick="addAcaoLinha()" style="background:none;border:1.5px solid var(--sys-deep);color:var(--sys-deep);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:800;cursor:pointer"><i data-lucide="plus"></i> ação</button></div>
-        <div id="cadAcoes"></div>
+        <div class="cad-secao-lista">
+          <div class="cad-secao-head">
+            <span class="cad-secao-t">Ações orçamentárias</span>
+            <button type="button" onclick="addAcaoLinha()" class="btn-outline"><i data-lucide="plus"></i> ação</button>
+          </div>
+          <div id="cadAcoes"></div>
+        </div>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;gap:10px;padding:18px 26px;border-top:1px solid var(--line);background:#f8fafc;border-radius:0 0 20px 20px">
-      <button onclick="fecharCadastro()" class="btn-ghost">Cancelar</button>
-      <button id="cadSalvar" onclick="salvarCadastro()" class="btn-primary"><i data-lucide="save"></i> Salvar processo</button>
+
+    <!-- rodapé fixo: os botões ficam sempre visíveis -->
+    <div class="cad-foot">
+      <button type="button" onclick="fecharCadastro()" class="btn-ghost">Cancelar</button>
+      <div class="cad-foot-dir">
+        <button type="button" id="cadVoltar" onclick="irParaEtapa(1)" class="btn-outline" style="display:none"><i data-lucide="arrow-left"></i> Voltar</button>
+        <button type="button" id="cadAvancar" onclick="irParaEtapa(2)" class="btn-primary">Avançar <i data-lucide="arrow-right"></i></button>
+        <button type="button" id="cadSalvar" onclick="salvarCadastro()" class="btn-primary" style="display:none"><i data-lucide="save"></i> Salvar processo</button>
+      </div>
     </div>
+
   </div>
 </div>
 
 <style>
+  /* ==== caixa de confirmacao do sistema ==== */
+  .conf-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);
+    z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;
+    opacity:0;transition:opacity .18s}
+  .conf-overlay.aberto{opacity:1}
+  .conf-card{background:#fff;border-radius:32px;box-shadow:0 30px 80px -20px rgba(15,23,42,.5);
+    width:100%;max-width:440px;padding:36px 34px 28px;text-align:center;
+    transform:scale(.95);transition:transform .18s}
+  .conf-overlay.aberto .conf-card{transform:scale(1)}
+  .conf-tile{width:64px;height:64px;border-radius:50%;margin:0 auto 18px;display:flex;
+    align-items:center;justify-content:center;background:rgba(141,198,63,.16);color:var(--sys-deep)}
+  .conf-tile.destrutivo{background:#fef2f2;color:var(--bad)}
+  .conf-tile svg{width:28px;height:28px}
+  .conf-card h3{font-size:20px;font-weight:900;color:var(--ink);letter-spacing:-.01em;margin-bottom:8px}
+  .conf-card p{font-size:13px;font-weight:600;color:var(--muted);line-height:1.55;margin-bottom:24px}
+  .conf-acoes{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+  .btn-primary.perigo{background:var(--bad);box-shadow:0 8px 20px -8px rgba(220,38,38,.6)}
+
+  /* ==== modal de cadastro / edicao (duas etapas) ==== */
+  .cad-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);
+    z-index:80;align-items:center;justify-content:center;padding:24px 16px}
+  .cad-overlay.aberto{display:flex}
+  .cad-modal{background:#fff;border-radius:32px;width:100%;max-width:920px;max-height:90vh;
+    display:flex;flex-direction:column;overflow:hidden;box-shadow:0 30px 80px -20px rgba(15,23,42,.5)}
+
+  .cad-head{padding:22px 28px 0;border-bottom:1px solid var(--line);flex:none}
+  .cad-head-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+  .cad-head h2{font-size:20px;font-weight:900;color:var(--ink);letter-spacing:-.01em}
+  .cad-passos{display:flex;align-items:center;gap:12px;padding:16px 0 0}
+  .cad-passo{display:inline-flex;align-items:center;gap:8px;background:none;border:none;cursor:pointer;
+    font:inherit;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--faint);padding:0 0 14px;border-bottom:3px solid transparent;transition:all .2s}
+  .cad-passo .n{width:22px;height:22px;border-radius:50%;background:var(--surface);color:var(--faint);
+    display:inline-flex;align-items:center;justify-content:center;font-size:11px;flex:none}
+  .cad-passo:hover{color:var(--muted)}
+  .cad-passo.on{color:var(--sys-deep);border-bottom-color:var(--sys)}
+  .cad-passo.on .n{background:var(--sys);color:#fff}
+  .cad-passo-linha{flex:1;height:1px;background:var(--line2);margin-bottom:14px;max-width:60px}
+
+  .cad-body{padding:24px 28px;overflow-y:auto;flex:1}
+  .cad-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px}
+  .cad-grid>div{min-width:0}   /* sem isto um valor longo empurra a coluna para fora */
+  .cad-grid .col-2{grid-column:1/-1}
+  .cad-secao{margin-top:22px;padding-top:20px;border-top:1px solid var(--line)}
+  .cad-secao-t{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);font-weight:900}
+  .cad-secao .cad-grid{margin-top:14px}
+  .cad-check{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--body);
+    margin-bottom:12px;cursor:pointer}
+  .cad-check input{width:17px;height:17px;accent-color:var(--sys);flex:none}
+
+  .cad-secao-lista{margin-bottom:26px}
+  .cad-secao-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .cad-cab-itens{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:8px;padding:0 12px 6px;
+    font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--faint)}
+  .cad-cab-itens span:nth-child(3),.cad-cab-itens span:nth-child(4){text-align:right}
+
+  .cad-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:16px 28px;border-top:1px solid var(--line);background:var(--surface);flex:none}
+  .cad-foot-dir{display:flex;gap:10px;align-items:center}
+
   .cad-l{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);font-weight:900;margin-bottom:7px;margin-left:4px}
   .cad-i{width:100%;font:inherit;font-size:12px;font-weight:700;padding:13px 14px;border:2px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);outline:none;transition:border-color .2s}
   .cad-i:focus{border-color:var(--sys)}
-  .cad-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px;align-items:center}
-  .cad-row input{font:inherit;font-size:12px;font-weight:700;padding:10px 12px;border:2px solid var(--line);border-radius:16px;background:var(--surface);outline:none;transition:border-color .2s}
+  .cad-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 28px;gap:8px;margin-bottom:8px;align-items:center}
+  .cad-row input{font:inherit;font-size:12px;font-weight:700;padding:10px 12px;border:2px solid var(--line);border-radius:16px;background:var(--surface);outline:none;transition:border-color .2s;min-width:0}
   .cad-row input:focus{border-color:var(--sys)}
+  .cad-row input[type=number]{text-align:right}
   .cad-del{cursor:pointer;color:var(--bad);text-align:center;display:inline-flex;align-items:center;justify-content:center}
-  .cad-acao-row{display:grid;grid-template-columns:1fr 2fr auto;gap:8px;margin-bottom:8px;align-items:center}
-  .cad-acao-row input{font:inherit;font-size:12px;font-weight:700;padding:10px 12px;border:2px solid var(--line);border-radius:16px;background:var(--surface);outline:none;transition:border-color .2s}
+  .cad-acao-row{display:grid;grid-template-columns:1fr 28px;gap:8px;margin-bottom:8px;align-items:center;max-width:280px}
+  .cad-acao-row input{font:inherit;font-size:12px;font-weight:700;padding:10px 12px;border:2px solid var(--line);border-radius:16px;background:var(--surface);outline:none;transition:border-color .2s;min-width:0}
   .cad-acao-row input:focus{border-color:var(--sys)}
+
+  @media(max-width:760px){
+    .cad-modal{max-height:94vh;border-radius:24px}
+    .cad-head,.cad-body,.cad-foot{padding-left:18px;padding-right:18px}
+    .cad-grid{grid-template-columns:1fr}
+    .cad-row{grid-template-columns:1fr 1fr;gap:6px}
+    .cad-cab-itens{display:none}
+  }
 </style>
 
 <!-- ===== MODAL TROCAR SENHA (primeiro acesso) ===== -->
@@ -1033,6 +1154,55 @@ function rotuloBotao(btn,texto,icone){
   if(window.desenharIcones) window.desenharIcones();
 }
 
+/* ---- caixa de confirmacao no estilo do sistema ----
+   Substitui confirm()/alert() do navegador, que ignoram a identidade
+   visual e, no caso do confirm, travam a pagina. */
+function confirmar(opcoes){
+  return new Promise(resolve=>{
+    const o = typeof opcoes==='string' ? {texto:opcoes} : (opcoes||{});
+    const destrutivo = !!o.destrutivo;
+    const wrap=document.createElement('div');
+    wrap.className='conf-overlay';
+    wrap.innerHTML=
+      '<div class="conf-card" role="dialog" aria-modal="true">'
+      + '<div class="conf-tile'+(destrutivo?' destrutivo':'')+'">'
+      +   '<i data-lucide="'+(o.icone||(destrutivo?'alert-triangle':'help-circle'))+'"></i>'
+      + '</div>'
+      + '<h3>'+sanitize(o.titulo||(destrutivo?'Tem certeza?':'Confirmar'))+'</h3>'
+      + (o.texto?'<p>'+sanitize(o.texto)+'</p>':'')
+      + '<div class="conf-acoes">'
+      +   (o.somenteAviso?'':'<button type="button" class="btn-ghost" data-conf="nao">'+sanitize(o.rotuloNao||'Cancelar')+'</button>')
+      +   '<button type="button" class="btn-primary'+(destrutivo?' perigo':'')+'" data-conf="sim">'
+      +     sanitize(o.rotuloSim||(destrutivo?'Excluir':'Confirmar'))+'</button>'
+      + '</div></div>';
+    document.body.appendChild(wrap);
+    if(window.desenharIcones) window.desenharIcones();
+    requestAnimationFrame(()=>wrap.classList.add('aberto'));
+
+    const fechar=(valor)=>{
+      wrap.classList.remove('aberto');
+      document.removeEventListener('keydown',aoTeclar);
+      setTimeout(()=>wrap.remove(),180);
+      resolve(valor);
+    };
+    function aoTeclar(e){
+      if(e.key==='Escape') fechar(false);
+      if(e.key==='Enter'){ e.preventDefault(); fechar(true); }
+    }
+    wrap.addEventListener('click',e=>{
+      const b=e.target.closest('[data-conf]');
+      if(b) return fechar(b.getAttribute('data-conf')==='sim');
+      if(e.target===wrap) fechar(false);           // clique fora cancela
+    });
+    document.addEventListener('keydown',aoTeclar);
+    setTimeout(()=>wrap.querySelector('[data-conf="sim"]').focus(),60);
+  });
+}
+// aviso simples, com um botao so
+function avisar(titulo,texto,icone){
+  return confirmar({titulo,texto,icone:icone||'info',somenteAviso:true,rotuloSim:'Entendi'});
+}
+
 /* ---- estado vazio ---- */
 function estadoVazio(icone,frase){
   return '<div class="empty fade-in"><div class="empty-tile"><i data-lucide="'+icone+'"></i></div>'
@@ -1099,7 +1269,7 @@ const FASES=[
   {key:"f-hom",label:"Homologação - Portal de Compras",ordem:7},
   {key:"f-parado",label:"Parado/Sem previsão",ordem:99}
 ];
-const COORDENACOES=["CAP","COA","CL"];
+const COORDENACOES=["CAP","COA","CL","CFCO","CAE"];
 // mapa: qual coordenação cuida de cada fase (pelo rótulo da fase/etapa)
 const FASE_COORD={
   // CAP — fases de ETP e TR
@@ -1145,13 +1315,17 @@ const FASES_DETALHADAS=(function(){
 function opcoesFaseDetalhada(selecionada){
   const ordem={CAP:1,COA:2,CL:3,CFCO:4};
   const sorted=FASES_DETALHADAS.slice().sort((a,b)=>(ordem[a.coord]||9)-(ordem[b.coord]||9));
-  return sorted.map(f=>'<option value="'+f.fase.replace(/"/g,'&quot;')+'"'+(f.fase===selecionada?' selected':'')+'>'+(f.coord?'['+f.coord+'] ':'')+f.fase+'</option>').join('');
+  // A sigla da coordenacao saiu do rotulo: aparecia como "[CL] Analise
+  // documental" e virava parte do nome da etapa na tela toda.
+  return sorted.map(f=>'<option value="'+f.fase.replace(/"/g,'&quot;')+'"'+(f.fase===selecionada?' selected':'')+'>'+f.fase+'</option>').join('');
 }
 function coordDoProcesso(p){
   const et=p.etapa_atual||'';
   // etapa_atual pode ser uma key macro (f-tr-a) ou um rótulo detalhado direto
   const lbl=FASE_LABEL[et]||et;
-  return FASE_COORD[lbl]||FASE_COORD[et]||null;
+  // Fase que não pertence a CAP/COA/CL/CFCO fica com a CAE (antes virava
+  // "sem coordenação" e sumia do gráfico de indicadores).
+  return FASE_COORD[lbl]||FASE_COORD[et]||'CAE';
 }
 const HIERARQUIA={"SUBRAS": {"nome": "Subsecretaria de Redes de Atenção à Saúde", "supers": {"SAPS": {"nome": "Superintendência de Atenção Primária", "dirs": [{"sig": "DEFAPS", "nome": "Diretoria de Estruturação e Financiamento da Atenção Primária à Saúde"}, {"sig": "DPAPS", "nome": "Diretoria de Políticas de Atenção Primária à Saúde"}, {"sig": "DGIC", "nome": "Diretoria de Gestão da Integralidade do Cuidado"}, {"sig": "DPSPE", "nome": "Diretoria de Promoção da Saúde e Políticas de Equidade"}]}, "SAE": {"nome": "Superintendência de Atenção Especializada", "dirs": [{"sig": "DATE", "nome": "Diretoria de Políticas Estratégicas"}, {"sig": "DAE", "nome": "Diretoria de Políticas e Estruturação de Atenção Especializada"}]}, "SPAH": {"nome": "Superintendência de Políticas de Atenção Hospitalar", "dirs": [{"sig": "DEHUE", "nome": "Diretoria de Estruturação Hospitalar e de Urgência e Emergência"}, {"sig": "DAHUE", "nome": "Diretoria de Atenção Hospitalar e Urgência e Emergência"}]}}}, "SUBVS": {"nome": "Subsecretaria de Vigilância em Saúde", "supers": {"SVE": {"nome": "Superintendência de Vigilância Epidemiológica", "dirs": [{"sig": "DVDTI", "nome": "Diretoria de Vigilância de Doenças Transmissíveis e Imunização"}, {"sig": "DVCC", "nome": "Diretoria de Vigilância de Condições Crônicas"}, {"sig": "DVAST", "nome": "Diretoria de Vigilância em Saúde Ambiental e Saúde do Trabalhador"}]}, "SVS": {"nome": "Superintendência de Vigilância Sanitária", "dirs": [{"sig": "DVSS", "nome": "Diretoria de Vigilância em Serviços de Saúde"}, {"sig": "DVA", "nome": "Diretoria de Vigilância em Alimentos"}, {"sig": "DVMC", "nome": "Diretoria de Vigilância em Medicamentos e Congêneres"}, {"sig": "DVEF", "nome": "Diretoria de Vigilância em Estrutura Física"}]}}}, "SUBASS": {"nome": "Subsecretaria de Acesso a Serviços de Saúde", "supers": {"SAF": {"nome": "Superintendência de Assistência Farmacêutica", "dirs": [{"sig": "DPAF", "nome": "Diretoria de Políticas de Assistência Farmacêutica"}, {"sig": "DPAM", "nome": "Diretoria de Planejamento e Aquisição de Medicamentos"}, {"sig": "DDM", "nome": "Diretoria de Distribuição de Medicamentos"}]}, "SRA": {"nome": "Superintendência de Regulação do Acesso", "dirs": [{"sig": "DERE", "nome": "Diretoria de Estratégias em Regulação Eletiva"}, {"sig": "DRAUE", "nome": "Diretoria de Regulação do Acesso de Urgência e Emergência"}]}, "SJUD": {"nome": "Superintendência de Judicialização da Saúde", "dirs": [{"sig": "DCDJ", "nome": "Diretoria de Cumprimento de Decisões Judiciais"}, {"sig": "DIJ", "nome": "Diretoria de Inteligência em Judicialização"}]}}}, "SUBGF": {"nome": "Subsecretaria de Gestão e Finanças", "supers": {"SPF": {"nome": "Superintendência de Planejamento e Finanças", "dirs": [{"sig": "DCF", "nome": "Diretoria de Contabilidade e Finanças"}, {"sig": "DCR", "nome": "Diretoria de Convênios e Resoluções"}, {"sig": "DPC", "nome": "Diretoria de Prestação de Contas"}, {"sig": "DPO", "nome": "Diretoria de Planejamento e Orçamento"}]}, "SGDP": {"nome": "Superintendência de Gestão e Desenvolvimento de Pessoas", "dirs": [{"sig": "DPDH", "nome": "Diretoria de Planejamento e Desenvolvimento Humano"}, {"sig": "DRH", "nome": "Diretoria de Recursos Humanos"}]}, "SILC": {"nome": "Superintendência de Infraestrutura, Logística e Contratações", "dirs": [{"sig": "DCC", "nome": "Diretoria de Compras e Contratos"}, {"sig": "DIFE", "nome": "Diretoria de Infraestrutura Física e Engenharia"}, {"sig": "DPAT", "nome": "Diretoria de Patrimônio"}, {"sig": "DLOG", "nome": "Diretoria de Logística"}]}}}, "SUBR": {"nome": "Subsecretaria de Regionalização", "supers": {"SIR": {"nome": "Superintendência de Integração Regional", "dirs": [{"sig": "DARPS", "nome": "Diretoria de Articulação Regional de Políticas de Saúde"}, {"sig": "DMPS", "nome": "Diretoria de Monitoramento de Políticas de Saúde"}]}}}};
 const ORGAOS_N1=[{"sig": "ASJUR", "nome": "Assessoria Jurídica"}, {"sig": "ASCOM", "nome": "Assessoria de Comunicação Social"}, {"sig": "AEST", "nome": "Assessoria Estratégica"}, {"sig": "ASRI", "nome": "Assessoria de Relações Institucionais"}, {"sig": "ATI", "nome": "Assessoria de Tecnologia e Informação"}, {"sig": "CSET", "nome": "Controladoria Setorial"}, {"sig": "AUDSUS", "nome": "Auditoria do SUS-MG"}, {"sig": "ASPAR", "nome": "Assessoria de Parcerias"}, {"sig": "GAB", "nome": "Gabinete"}];
@@ -1234,6 +1408,7 @@ async function authLogin(email,senha){
   if(!r.ok){throw new Error(data.error_description||data.msg||"E-mail ou senha inválidos.");}
   AUTH_TOKEN=data.access_token;
   REFRESH_TOKEN=data.refresh_token||null;
+  lembrarSessao();
   return data;
 }
 // renova o access_token expirado. Devolve true se conseguiu.
@@ -1251,6 +1426,7 @@ async function authRenovarToken(){
     if(!data.access_token) return false;
     AUTH_TOKEN=data.access_token;
     if(data.refresh_token) REFRESH_TOKEN=data.refresh_token;
+    lembrarSessao();
     return true;
   }catch(e){ return false; }
 }
@@ -1278,7 +1454,42 @@ async function authTrocarSenha(novaSenha){
   if(!r.ok)throw new Error(data.error_description||data.msg||"Erro ao trocar senha.");
   return data;
 }
-function authLogout(){AUTH_TOKEN=null;REFRESH_TOKEN=null;USUARIO_LOGADO=null;PROCESSOS_CARREGADOS=[];}
+function authLogout(){
+  AUTH_TOKEN=null;REFRESH_TOKEN=null;USUARIO_LOGADO=null;PROCESSOS_CARREGADOS=[];
+  esquecerSessao();
+}
+
+/* ---- sessao sobrevive ao F5 ----
+   O token so existia em memoria: recarregar a pagina caia no login.
+   Fica em sessionStorage (nao localStorage): some quando a aba fecha,
+   entao um computador compartilhado nao guarda a sessao. */
+const CHAVE_SESSAO='gc_sessao';
+function lembrarSessao(){
+  try{
+    if(!REFRESH_TOKEN) return;
+    sessionStorage.setItem(CHAVE_SESSAO,JSON.stringify({r:REFRESH_TOKEN}));
+  }catch(e){}
+}
+function esquecerSessao(){
+  try{ sessionStorage.removeItem(CHAVE_SESSAO); }catch(e){}
+}
+// Chamada no carregamento: troca o refresh_token guardado por uma sessao
+// nova. Devolve true se conseguiu entrar sem pedir senha.
+async function retomarSessao(){
+  let dados=null;
+  try{ dados=JSON.parse(sessionStorage.getItem(CHAVE_SESSAO)||'null'); }catch(e){}
+  if(!dados||!dados.r) return false;
+  REFRESH_TOKEN=dados.r;
+  if(!await authRenovarToken()){ esquecerSessao(); REFRESH_TOKEN=null; return false; }
+  try{
+    const perfil=await authPerfil();
+    if(!perfil){ esquecerSessao(); return false; }
+    USUARIO_LOGADO=perfil;
+    lembrarSessao();
+    aplicarUsuarioNasTelas();
+    return true;
+  }catch(e){ esquecerSessao(); return false; }
+}
 
 // solicitar redefinição de senha (envia e-mail com link)
 async function esqueciSenha(){
@@ -1512,9 +1723,39 @@ function abrirCadastro(){
   document.getElementById('cadAcoes').innerHTML='';
   addItemLinha(); addAcaoLinha();
   const msg=document.getElementById('cadMsg'); msg.style.display='none';
-  document.getElementById('cadOverlay').style.display='flex';
+  abrirModalCadastro('Cadastrar processo','Salvar processo');
 }
-function fecharCadastro(){document.getElementById('cadOverlay').style.display='none';}
+
+// --- navegacao entre as duas etapas do modal ---
+function abrirModalCadastro(titulo,rotuloSalvar){
+  const t=document.getElementById('cadTitulo'); if(t)t.textContent=titulo;
+  rotuloBotao(document.getElementById('cadSalvar'),rotuloSalvar,'save');
+  irParaEtapa(1);
+  document.getElementById('cadOverlay').classList.add('aberto');
+  setTimeout(()=>{const c=document.getElementById('c_objeto'); if(c)c.focus();},60);
+}
+function irParaEtapa(n){
+  const e1=document.getElementById('cadEtapa1'), e2=document.getElementById('cadEtapa2');
+  if(!e1||!e2) return;
+  // sair da etapa 1 sem objeto nao faz sentido: e o unico campo obrigatorio
+  if(n===2){
+    const obj=document.getElementById('c_objeto');
+    if(obj && !obj.value.trim()){
+      cadMostraMsg('Informe o objeto da contratacao antes de avancar.','erro');
+      irParaEtapa(1); obj.focus(); return;
+    }
+  }
+  e1.style.display = n===1 ? '' : 'none';
+  e2.style.display = n===2 ? '' : 'none';
+  document.getElementById('cadPasso1').classList.toggle('on',n===1);
+  document.getElementById('cadPasso2').classList.toggle('on',n===2);
+  document.getElementById('cadVoltar').style.display  = n===2 ? '' : 'none';
+  document.getElementById('cadAvancar').style.display = n===1 ? '' : 'none';
+  document.getElementById('cadSalvar').style.display  = n===2 ? '' : 'none';
+  const corpo=document.querySelector('.cad-body'); if(corpo)corpo.scrollTop=0;
+  if(window.desenharIcones) window.desenharIcones();
+}
+function fecharCadastro(){document.getElementById('cadOverlay').classList.remove('aberto');}
 function addItemLinha(dados){
   const div=document.createElement('div');
   div.className='cad-row';
@@ -1530,11 +1771,10 @@ function addItemLinha(dados){
 function addAcaoLinha(dados){
   const div=document.createElement('div');
   div.className='cad-acao-row';
-  div.innerHTML='<input placeholder="Código (ex.: 4145)" class="ac-cod"><input placeholder="Descrição da ação" class="ac-desc"><span class="cad-del" onclick="this.parentElement.remove()" title="Remover linha"><i data-lucide="x"></i></span>';
+  div.innerHTML='<input placeholder="Código da ação (ex.: 4145)" class="ac-cod"><span class="cad-del" onclick="this.parentElement.remove()" title="Remover linha"><i data-lucide="x"></i></span>';
   document.getElementById('cadAcoes').appendChild(div);
   if(dados){
     div.querySelector('.ac-cod').value=dados.codigo_acao||'';
-    div.querySelector('.ac-desc').value=dados.descricao||'';
   }
 }
 function cadMostraMsg(txt,tipo){
@@ -1548,7 +1788,7 @@ async function abrirEdicao(id){
   try{
     const arr=await sbGet('/processos?id=eq.'+id+'&select=*');
     const p=arr[0];
-    if(!p){alert('Processo não encontrado.');return;}
+    if(!p){ avisar('Processo não encontrado','Ele pode ter sido excluído por outra pessoa. Atualize a lista.','search-x'); return; }
     EDITANDO_ID=id;
     // popular etapas e dropdowns
     const sel=document.getElementById('c_etapa');
@@ -1576,12 +1816,9 @@ async function abrirEdicao(id){
     const acoes=await sbGet('/processo_acoes?processo_id=eq.'+id+'&select=*');
     if(itens.length)itens.forEach(it=>addItemLinha(it)); else addItemLinha();
     if(acoes.length)acoes.forEach(a=>addAcaoLinha(a)); else addAcaoLinha();
-    // ajustar título e botão do modal
-    const titulo=document.querySelector('#cadOverlay h2'); if(titulo)titulo.textContent='Editar processo';
-    const btn=document.getElementById('cadSalvar'); rotuloBotao(btn,'Salvar alterações','save');
     const msg=document.getElementById('cadMsg'); if(msg)msg.style.display='none';
-    document.getElementById('cadOverlay').style.display='flex';
-  }catch(e){alert('Erro ao abrir edição: '+e.message);}
+    abrirModalCadastro('Editar processo','Salvar alterações');
+  }catch(e){ avisar('Não foi possível abrir a edição',e.message,'alert-triangle'); }
 }
 async function salvarCadastro(){
   const objeto=document.getElementById('c_objeto').value.trim();
@@ -1597,8 +1834,7 @@ async function salvarCadastro(){
   })).filter(it=>it.descricao);
   // coletar ações
   const acoes=[...document.querySelectorAll('#cadAcoes .cad-acao-row')].map(r=>({
-    codigo_acao:r.querySelector('.ac-cod').value.trim(),
-    descricao:r.querySelector('.ac-desc').value.trim()
+    codigo_acao:r.querySelector('.ac-cod').value.trim()
   })).filter(a=>a.codigo_acao);
   const dados={
     objeto:objeto,
@@ -1690,11 +1926,17 @@ function linhaProcesso(p){
 async function excluirProcesso(id){
   const p=(PROCESSOS_CARREGADOS||[]).find(x=>String(x.id)===String(id));
   const codigo=p&&p.codigo?p.codigo:'#'+id;
-  if(!confirm('Excluir o processo '+codigo+'? Esta ação não pode ser desfeita.'))return;
+  const ok=await confirmar({
+    destrutivo:true,
+    titulo:'Excluir este processo?',
+    texto:'O processo '+codigo+(p&&p.objeto?' — '+p.objeto:'')+' será removido, junto com os itens, ações e etapas. Esta ação não pode ser desfeita.',
+    rotuloSim:'Excluir processo'
+  });
+  if(!ok)return;
   try{
     await sbDelete('processos','id=eq.'+id);
     atualizarListas();
-  }catch(e){alert('Erro ao excluir: '+e.message);}
+  }catch(e){ avisar('Não foi possível excluir',e.message,'alert-triangle'); }
 }
 
 let PROCESSOS_CARREGADOS=[];
@@ -1781,13 +2023,27 @@ async function atualizarListas(){
       if(FILTRO_AV.fase) procsDcc=procsDcc.filter(p=>p.etapa_atual===FILTRO_AV.fase);
       if(FILTRO_AV.objeto) procsDcc=procsDcc.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
       dccBody.innerHTML=procsDcc.map(linhaProcessoDCC).join('');
+      if(!procsDcc.length) dccBody.innerHTML=linhaVaziaDcc();
     }
+    marcarKpiAtivo();
   }catch(e){
     // Antes isto era só um console.warn: a lista ficava vazia sem dizer por
     // quê, e uma falta de permissão parecia "o banco está sem dados".
     console.warn('Não foi possível carregar processos:',e.message);
     mostrarFalhaNasListas(e.message);
   }
+}
+
+// Filtro sem resultado na DCC: a frase muda conforme o filtro ativo.
+function linhaVaziaDcc(){
+  let frase='Nenhum processo para os filtros selecionados.';
+  if(FILTRO_AV.status==='em_atraso') frase='Nenhum processo em atraso. Ótimo sinal.';
+  else if(FILTRO_AV.status==='aguardando_validacao') frase='Nenhum processo aguardando sua validação.';
+  else if(FILTRO_COORD && FILTRO_COORD!=='TODAS') frase='Nenhum processo na coordenação '+FILTRO_COORD+'.';
+  return '<tr><td colspan="9" style="padding:0">'
+    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+    + '<div class="empty-tile"><i data-lucide="filter"></i></div>'
+    + '<p>'+sanitize(frase)+'</p></div></td></tr>';
 }
 
 // Nenhum processo no escopo do usuário — diferente de "deu erro".
@@ -1824,6 +2080,30 @@ function mostrarFalhaNasListas(detalhe){
 let FILTRO_COORD='TODAS';
 let FILTRO_PRIO='todos';
 let FILTRO_AV={sei:'',area:'',status:'',modal:'',objeto:'',fase:'',catmas:''};
+
+// Clicar num balão da DCC filtra a lista por aquele status. Clicar de novo
+// no mesmo balão desfaz o filtro.
+function filtrarPorKpi(status){
+  const jaAtivo = FILTRO_AV.status===status;
+  FILTRO_AV={...FILTRO_AV, status: jaAtivo ? '' : status};
+  const sel=document.getElementById('fdcc_status');
+  if(sel) sel.value=FILTRO_AV.status;
+  atualizarListas();
+  const lista=document.querySelector('#screen-dcc .listwrap');
+  if(lista && !jaAtivo) lista.scrollIntoView({behavior:'smooth',block:'start'});
+}
+// Marca visualmente qual balão está filtrando
+function marcarKpiAtivo(){
+  const pares=[['kpi-tag-atraso','em_atraso'],['kpi-tag-validacao','aguardando_validacao']];
+  pares.forEach(([id,status])=>{
+    const tag=document.getElementById(id);
+    if(!tag) return;
+    const ativo=FILTRO_AV.status===status;
+    tag.textContent = ativo ? 'filtrando · clique para limpar' : 'clique para filtrar';
+    const card=tag.closest('.kpi');
+    if(card) card.classList.toggle('kpi-ativo',ativo);
+  });
+}
 let PROC_ATUAL=null;
 let USUARIO_LOGADO=null;
 async function fazerLogin(){
@@ -2088,14 +2368,23 @@ async function renderGanttResumo(cont,etapas,proc){
     if(proj&&proj.temPrazos)fimProj=proj.fimProj;
     else{ fimProj=hoje; semPrazos=true; }
   }
-  // barras: {label, ini, fim, cor}
+  // Barras escalonadas, cada uma no seu periodo real. Antes as tres
+  // comecavam no mesmo ponto e o grafico nao dizia QUANDO cada coisa
+  // aconteceu, so quanto tempo durava.
+  //   Planejado -> do inicio ate a meta (prazo_final)
+  //   Executado -> do inicio real ate o ultimo retorno registrado
+  //   Projetado -> comeca ONDE O EXECUTADO PAROU e vai ate a tendencia
+  const inicioProj = fimExec > hoje ? fimExec : hoje;
   const barras=[
-    {label:'Planejado',ini:inicio,fim:fimPlan,cor:'#007fb6',claro:'rgba(0,127,182,.45)'},
-    {label:'Executado',ini:inicio,fim:fimExec,cor:'#4f7a24',claro:'rgba(141,198,63,.75)'},
-    {label:'Projetado',ini:inicio,fim:fimProj,cor:'#f58220',claro:'rgba(245,130,32,.72)'}
-  ].filter(b=>b.fim);
+    {label:'Planejado',ini:inicio,      fim:fimPlan,cor:'#007fb6',claro:'rgba(0,127,182,.45)',
+     dica:'Do inicio do processo ate o prazo final desejado'},
+    {label:'Executado',ini:inicio,      fim:fimExec,cor:'#4f7a24',claro:'rgba(141,198,63,.75)',
+     dica:'Periodo ja percorrido, pelas datas registradas nas etapas'},
+    {label:'Projetado',ini:inicioProj,  fim:fimProj,cor:'#f58220',claro:'rgba(245,130,32,.72)',
+     dica:'Do ponto em que o processo esta ate o termino previsto'}
+  ].filter(b=>b.fim && b.fim>=b.ini);
   // range temporal total (para a régua)
-  const todasDatas=[inicio,...barras.map(b=>b.fim)];
+  const todasDatas=[inicio,hoje,...barras.map(b=>b.ini),...barras.map(b=>b.fim)];
   let minD=new Date(Math.min(...todasDatas)), maxD=new Date(Math.max(...todasDatas));
   // margem de meio mês nas pontas
   minD=new Date(minD.getFullYear(),minD.getMonth(),1);
@@ -2122,7 +2411,7 @@ async function renderGanttResumo(cont,etapas,proc){
     return '<div style="display:flex;align-items:center;gap:0;margin-bottom:9px">'
       +'<div style="width:88px;font-size:11px;font-weight:700;color:var(--muted);text-align:right;flex:none;padding-right:4px">'+b.label+'</div>'
       +'<div style="flex:1;height:20px;position:relative">'
-      +'<div style="position:absolute;left:'+left+'%;width:'+width+'%;top:0;bottom:0;background:'+b.claro+';border-radius:6px" title="'+fmt(b.ini)+' a '+fmt(b.fim)+' ('+nd+' dias)"></div>'
+      +'<div style="position:absolute;left:'+left+'%;width:'+width+'%;top:0;bottom:0;background:'+b.claro+';border-radius:6px" data-tip="'+sanitize(b.label+'\n'+fmt(b.ini)+' a '+fmt(b.fim)+'\n'+nd+' dia'+(nd===1?'':'s')+(b.dica?'\n'+b.dica:''))+'"></div>'
       +'<span style="position:absolute;left:calc('+(left+width)+'% + 6px);top:2px;font-size:9.5px;color:var(--faint);white-space:nowrap">'+fmt(b.fim)+'</span>'
       +'</div></div>';
   }
@@ -2167,7 +2456,7 @@ async function carregarResumos(pid){
   }catch(e){cont.innerHTML=estadoVazio('wifi-off','Não foi possível carregar os resumos.');}
 }
 function abrirResumo(){
-  if(!PROC_ATUAL){alert('Abra um processo primeiro.');return;}
+  if(!PROC_ATUAL){ avisar('Nenhum processo aberto','Abra um processo para registrar o resumo da semana.','file-question'); return; }
   const texto=prompt('Resumo desta semana:');
   if(!texto||!texto.trim())return;
   salvarResumo(texto.trim());
@@ -2187,7 +2476,7 @@ async function salvarResumo(texto){
       texto:texto, autor_email:'sistema@saude.mg.gov.br'
     });
     carregarResumos(PROC_ATUAL.id);
-  }catch(e){alert('Erro ao salvar resumo: '+e.message);}
+  }catch(e){ avisar('Não foi possível salvar o resumo',e.message,'alert-triangle'); }
 }
 
 function upMsg(txt,tipo){
@@ -2251,14 +2540,15 @@ async function calcularIndicadores(){
     setTxt('ind_total',total);
     setTxt('ind_situacao','<span style="color:#4d7c0f">'+noPrazo+' no prazo</span> · <span style="color:#dc2626">'+atraso+' atrasados</span>');
     // gráfico: processos por coordenação atual (pela fase detalhada de cada um)
-    const coordsList=['CAP','COA','CL','CFCO'];
-    const cont={'CAP':0,'COA':0,'CL':0,'CFCO':0,'Sem coord.':0};
+    // CAE recebe tudo que nao pertence a CAP/COA/CL/CFCO — a barra
+    // "Sem coord." deixa de existir.
+    const coordsList=COORDENACOES;
+    const cont={}; coordsList.forEach(k=>cont[k]=0);
     procs.forEach(p=>{
       const c=coordDoProcesso(p);
-      if(c&&cont[c]!==undefined)cont[c]++;
-      else cont['Sem coord.']++;
+      if(cont[c]!==undefined)cont[c]++; else cont['CAE']++;
     });
-    const chaves=[...coordsList,'Sem coord.'].filter(k=>cont[k]>0||coordsList.includes(k));
+    const chaves=coordsList;
     const maxv=Math.max(1,...Object.values(cont));
     const bars=document.getElementById('ind_bars');
     if(bars){
@@ -2323,12 +2613,50 @@ function linhaProcessoDCC(p){
     +'<td>'+stCell+'</td>'
     +'<td><div class="acts">'+acao+editar+excluir+'</div></td></tr>';
 }
+/* ============================================================
+   INICIALIZACAO DA TELA DE LOGIN
+   ============================================================ */
+(function(){
+  document.addEventListener('DOMContentLoaded',async ()=>{
+    // 1) Enter nos campos de login entra (antes so o clique no botao)
+    ['login_email','login_senha'].forEach(id=>{
+      const campo=document.getElementById(id);
+      if(!campo) return;
+      campo.addEventListener('keydown',e=>{
+        if(e.key!=='Enter') return;
+        e.preventDefault();
+        // do e-mail, Enter pula para a senha; da senha, entra
+        if(id==='login_email' && !document.getElementById('login_senha').value){
+          document.getElementById('login_senha').focus();
+        }else{
+          fazerLogin();
+        }
+      });
+    });
+
+    // 2) F5 nao pode deslogar: retoma a sessao guardada na aba
+    if(MODO_RECUPERACAO) return;            // link de recuperar senha tem fluxo proprio
+    const entrou=await retomarSessao();
+    if(!entrou) return;
+    const destino={gabinete:'gabinete',subsecretario:'sub',ponto_focal:'focal',dcc:'dcc'}[USUARIO_LOGADO.nivel]||'gabinete';
+    // volta para a tela em que a pessoa estava, se o endereco disser qual
+    const alvo=(location.hash||'').replace('#','');
+    const permitidas=['gabinete','sub','focal','dcc','indicadores','processo'];
+    showScreen(permitidas.includes(alvo)&&alvo!=='processo' ? alvo : destino, true);
+  });
+})();
+
 async function validarProcesso(id){
-  if(!confirm('Confirmar a validação deste avanço?'))return;
+  const ok=await confirmar({
+    titulo:'Confirmar a validação?',
+    texto:'Você está confirmando que a etapa informada pela área foi mesmo concluída. O processo volta para "em andamento".',
+    rotuloSim:'Validar',icone:'check-circle-2'
+  });
+  if(!ok)return;
   try{
     await sbPatch('processos','id=eq.'+id,{status:'em_andamento'});
     atualizarListas();
-  }catch(e){alert('Erro ao validar: '+e.message);}
+  }catch(e){ avisar('Não foi possível validar',e.message,'alert-triangle'); }
 }
 
 </script>
