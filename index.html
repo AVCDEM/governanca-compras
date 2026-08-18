@@ -2294,38 +2294,23 @@ function renderGantt(etapas){
   if(!cont)return;
   renderGanttResumo(cont,etapas,PROC_ATUAL);
 }
-// cache dos prazos por modalidade (carregado sob demanda)
-let PRAZOS_CACHE=null;
-async function carregarPrazos(){
-  if(PRAZOS_CACHE)return PRAZOS_CACHE;
-  try{
-    const rows=await sbGet('/prazos_fase?select=fase,dias_normal,dias_prioritario,ordem,modalidades(sigla)&order=ordem.asc');
-    PRAZOS_CACHE={};
-    rows.forEach(r=>{
-      const sig=r.modalidades&&r.modalidades.sigla; if(!sig)return;
-      PRAZOS_CACHE[sig]=PRAZOS_CACHE[sig]||[];
-      PRAZOS_CACHE[sig].push({fase:r.fase,normal:r.dias_normal,prio:r.dias_prioritario,ordem:r.ordem});
-    });
-  }catch(e){PRAZOS_CACHE={};}
-  return PRAZOS_CACHE;
-}
-// mapa modalidade (nome do processo) -> sigla da tabela de prazos
-function siglaModalidade(m){
-  if(!m)return null;
-  const s=(''+m).toLowerCase();
-  if(s.includes('registro de pre'))return 'PE-RP';
-  if(s.includes('pregão')||s.includes('pregao'))return 'PE';
-  if(s.includes('dispensa'))return 'DISP';
-  if(s.includes('inexig'))return 'INEX';
-  if(s.includes('cotep')||s.includes('cotação')||s.includes('cotacao'))return 'COTEP';
-  if(s.includes('concorr'))return 'CONC';
-  if(s.includes('adesão')||s.includes('adesao')||s.includes('carona'))return 'ADESAO';
-  if(s.includes('credenc'))return 'CRED';
-  return null;
-}
 // projeta a data de término: hoje + soma dos prazos das fases que FALTAM
 /* ============================================================
-   CALCULADORA DE PRAZOS — planilha "Fases novas.xlsx"
+   CALCULADORA DE PRAZOS — FONTE UNICA
+   ------------------------------------------------------------
+   Vem da planilha "Fases novas.xlsx" (DCC). E a unica fonte de
+   prazo do sistema: a tabela prazos_fase do Supabase existe mas
+   NAO e mais lida por ninguem.
+
+   PARA MUDAR UM PRAZO: edite o numero aqui embaixo e publique.
+     PRAZOS_COORD -> CAP, COA e CFCO. Valem para toda modalidade.
+                     [dias prioridade regular, dias alta prioridade]
+     PRAZOS_CL    -> etapas da CL. Mudam por modalidade e NAO
+                     variam por prioridade.
+   "Outros" existe em todas as coordenacoes mas fica fora do fluxo
+   previsto: e etapa coringa, nao faz parte do caminho.
+   ------------------------------------------------------------
+   planilha "Fases novas.xlsx"
    dias previstos por etapa, por coordenacao e por modalidade.
    CAP/COA/CFCO: [dias regular, dias alta prioridade]
    CL: depende da modalidade e nao varia por prioridade.
@@ -2473,28 +2458,6 @@ function projetarPelaCalculadora(proc,etapas,fimExec){
           diasDaAtual:(fluxo[idx]&&fluxo[idx].dias)||null};
 }
 
-async function calcularProjecao(proc,etapas){
-  const prazos=await carregarPrazos();
-  const sig=siglaModalidade(proc.modalidade);
-  const lista=sig&&prazos[sig]?prazos[sig]:null;
-  if(!lista||!lista.length)return null; // sem prazos dessa modalidade
-  const prio=!!proc.prioritario;
-  // fase atual = última etapa com data_entrada (a mais recente)
-  const comData=etapas.filter(e=>e.data_entrada).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
-  const faseAtual=comData.length?comData[comData.length-1].fase:(proc.etapa_atual||'');
-  // achar posição da fase atual na lista de prazos
-  let idx=lista.findIndex(p=>p.fase===faseAtual);
-  if(idx<0)idx=0; // se não achar, considera desde o início
-  // somar dias das fases que faltam (da atual, inclusive, em diante)
-  let diasRestantes=0;
-  for(let i=idx;i<lista.length;i++){
-    if(lista[i].fase==='Outros')continue; // "Outros" não conta no prazo
-    diasRestantes+=(prio?lista[i].prio:lista[i].normal)||0;
-  }
-  const hoje=new Date(); hoje.setHours(0,0,0,0);
-  const fimProj=new Date(hoje); fimProj.setDate(fimProj.getDate()+diasRestantes);
-  return {fimProj,diasRestantes,temPrazos:true};
-}
 // Gantt resumido: 3 barras (planejado x executado x projetado)
 async function renderGanttResumo(cont,etapas,proc){
   if(!cont)return;
