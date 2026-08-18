@@ -787,7 +787,7 @@
   <div class="filters-overlay" id="filtersOverlayDcc">
     <div class="filters">
       <h3>Filtros avançados <span class="x" id="closeFiltersDcc"><i data-lucide="x"></i></span></h3>
-      <div class="ff"><label>Área demandante</label><select id="fdcc_area"><option value="">Todas as áreas</option><option>SUBVS</option><option>SUBGF</option><option>SUBRAS</option><option>SUBASS</option><option>SUBR</option></select></div>
+      <div class="ff escopo-total-only"><label>Área demandante</label><select id="fdcc_area"><option value="">Todas as áreas</option><option>SUBVS</option><option>SUBGF</option><option>SUBRAS</option><option>SUBASS</option><option>SUBR</option></select></div>
       <div class="ff"><label>Status</label><select id="fdcc_status"><option value="">Todos</option><option value="em_andamento">Em andamento</option><option value="em_atraso">Em atraso</option><option value="aguardando_validacao">Aguardando validação</option><option value="concluido">Concluído</option></select></div>
       <div class="ff"><label>Nº SEI</label><input type="text" id="fdcc_sei" placeholder="Buscar por SEI..."></div>
       <div class="ff"><label>Item CATMAS</label><input type="text" id="fdcc_catmas" placeholder="Buscar por CATMAS..."></div>
@@ -939,6 +939,9 @@
      Some para quem o banco nao deixa escrever (gabinete e subsecretaria),
      para a pessoa nao clicar num botao que vai voltar erro. */
   body.sem-escrita .escrita-only{display:none!important}
+  /* Filtrar por area so faz sentido para quem enxerga mais de uma.
+     Para os demais o campo daria a impressao de alcancar outra area. */
+  body.escopo-restrito .escopo-total-only{display:none!important}
   /* sem o painel lateral, o conteudo ocupa a largura toda em vez de
      deixar uma coluna de 340px vazia */
   body.sem-escrita .main{grid-template-columns:1fr}
@@ -2027,6 +2030,10 @@ function colunasDaTela(sel){
 function aplicarFiltroInicial(perfil){
   FILTRO_PRIO = (perfil && perfil.nivel==='gabinete') ? 'sim' : 'todos';
   FILTRO_COORD='TODAS';
+  // comeca sem filtro avancado nenhum, inclusive area
+  FILTRO_AV={sei:'',area:'',status:'',modal:'',objeto:'',fase:'',catmas:''};
+  ['fdcc_sei','fdcc_area','fdcc_status','fdcc_modal','fdcc_fase','fdcc_objeto','fdcc_catmas']
+    .forEach(id=>{const e=document.getElementById(id); if(e)e.value='';});
   if(typeof sincronizarBarrasDeFiltro==='function') sincronizarBarrasDeFiltro();
 }
 
@@ -2210,10 +2217,16 @@ function podeEscrever(){
   return !!USUARIO_LOGADO && ['ponto_focal','dcc'].includes(USUARIO_LOGADO.nivel);
 }
 
+// Gabinete e DCC enxergam todas as areas; os demais, so a sua.
+function veTodasAsAreas(){
+  return !!USUARIO_LOGADO && ['gabinete','dcc'].includes(USUARIO_LOGADO.nivel);
+}
+
 function aplicarUsuarioNasTelas(){
   if(!USUARIO_LOGADO)return;
   const u=USUARIO_LOGADO;
   document.body.classList.toggle('sem-escrita',!podeEscrever());
+  document.body.classList.toggle('escopo-restrito',!veTodasAsAreas());
   document.querySelectorAll('#screen-focal .role-tag').forEach(el=>el.textContent='Ponto Focal · '+(u.superintendencia||''));
   document.querySelectorAll('#screen-sub .role-tag').forEach(el=>el.textContent=u.subsecretaria||'Subsecretaria/Assessoria');
 }
