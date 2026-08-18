@@ -267,12 +267,6 @@
   .demobar .sep{width:1px;background:rgba(255,255,255,.15);margin:4px 2px}
   .demobar .lbl{font-size:10px;color:#8a8698;padding:8px 6px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 
-  .gab-mode-prio .nao-prio{display:none}
-  .gab-mode-prio .nao-prio + .exp-row{display:none}
-  .sub-mode-prio .nao-prio{display:none}
-  .sub-mode-prio .nao-prio + .exp-row{display:none}
-  .foc-mode-prio .nao-prio{display:none}
-  .foc-mode-prio .nao-prio + .exp-row{display:none}
   /* ==== página do processo ==== */
   /* botao voltar: era so um texto cinza e passava despercebido */
   .back{display:inline-flex;align-items:center;gap:8px;color:var(--body);font-weight:900;font-size:11px;
@@ -523,11 +517,15 @@
     </div>
     <div class="filt-bar">
       <div class="filt-row">
-      <span class="filt-lbl">Prioridade</span>
-      <div class="seg" id="gabSeg"><button onclick="setGabMode('prio',this)"><i data-lucide="star"></i> Prioritário</button><button class="on" onclick="setGabMode('geral',this)">Geral</button></div>
+        <span class="filt-lbl">Prioritários</span>
+        <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
+        <span class="filt-sep"></span>
+        <span class="filt-lbl">Coordenação</span>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
+        <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
+      </div>
     </div>
-    </div>
-    <div class="listwrap gab-mode-geral" id="gabList">
+    <div class="listwrap" id="gabList">
       <table>
         <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
         <tbody>
@@ -565,11 +563,15 @@
     </div>
     <div class="filt-bar">
       <div class="filt-row">
-      <span class="filt-lbl">Prioridade</span>
-      <div class="seg" id="subSeg"><button onclick="setSubMode('prio',this)"><i data-lucide="star"></i> Prioritário</button><button class="on" onclick="setSubMode('geral',this)">Geral</button></div>
+        <span class="filt-lbl">Prioritários</span>
+        <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
+        <span class="filt-sep"></span>
+        <span class="filt-lbl">Coordenação</span>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
+        <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
+      </div>
     </div>
-    </div>
-    <div class="listwrap sub-mode-geral" id="subList">
+    <div class="listwrap" id="subList">
       <table>
         <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
         <tbody>
@@ -607,11 +609,15 @@
     </div>
     <div class="filt-bar">
       <div class="filt-row">
-      <span class="filt-lbl">Prioridade</span>
-      <div class="seg" id="focSeg"><button onclick="setFocMode('prio',this)"><i data-lucide="star"></i> Prioritário</button><button class="on" onclick="setFocMode('geral',this)">Geral</button></div>
+        <span class="filt-lbl">Prioritários</span>
+        <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
+        <span class="filt-sep"></span>
+        <span class="filt-lbl">Coordenação</span>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
+        <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
+      </div>
     </div>
-    </div>
-    <div class="listwrap foc-mode-geral" id="focList">
+    <div class="listwrap" id="focList">
       <table>
         <thead><tr><th style="width:32px"></th><th>Objeto</th><th>Área</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th style="width:44px"></th></tr></thead>
         <tbody>
@@ -768,11 +774,11 @@
     <div class="filt-bar">
       <div class="filt-row">
         <span class="filt-lbl">Prioritários</span>
-        <div class="seg" id="segPrio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
+        <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
         <span class="filt-sep"></span>
         <span class="filt-lbl">Coordenação</span>
-        <div class="coord-chips" id="coordChips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
-        <button class="filt-btn" id="btnFiltersDcc"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
+        <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
       </div>
     </div>
     <div class="listwrap">
@@ -1208,6 +1214,15 @@ function avisar(titulo,texto,icone){
   return confirmar({titulo,texto,icone:icone||'info',somenteAviso:true,rotuloSim:'Entendi'});
 }
 
+/* ---- data no formato brasileiro ----
+   O banco guarda AAAA-MM-DD; a tela mostra DD/MM/AAAA. Sem depender de
+   new Date(), que interpreta a string como UTC e desloca o dia. */
+function fmtData(v){
+  if(!v) return '—';
+  const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(v));
+  return m ? (m[3]+'/'+m[2]+'/'+m[1]) : String(v);
+}
+
 /* ---- estado vazio ---- */
 function estadoVazio(icone,frase){
   return '<div class="empty fade-in"><div class="empty-tile"><i data-lucide="'+icone+'"></i></div>'
@@ -1497,6 +1512,7 @@ async function retomarSessao(){
     const perfil=await authPerfil();
     if(!perfil){ esquecerSessao(); return false; }
     USUARIO_LOGADO=perfil;
+    aplicarFiltroInicial(perfil);
     lembrarSessao();
     aplicarUsuarioNasTelas();
     return true;
@@ -1538,27 +1554,6 @@ async function esqueciSenha(){
 </script>
 
 <script>
-  function setGabMode(mode,btn){
-    const list=document.getElementById('gabList');
-    if(mode==='prio')list.classList.add('gab-mode-prio');
-    else list.classList.remove('gab-mode-prio');
-    document.querySelectorAll('#gabSeg button').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-  }
-  function setSubMode(mode,btn){
-    const list=document.getElementById('subList');
-    if(mode==='prio')list.classList.add('sub-mode-prio');
-    else list.classList.remove('sub-mode-prio');
-    document.querySelectorAll('#subSeg button').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-  }
-  function setFocMode(mode,btn){
-    const list=document.getElementById('focList');
-    if(mode==='prio')list.classList.add('foc-mode-prio');
-    else list.classList.remove('foc-mode-prio');
-    document.querySelectorAll('#focSeg button').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-  }
   function showScreen(id,fromPop){
     // NAO deslogar aqui: showScreen('login') tambem roda no carregamento da
     // pagina, e apagava a sessao guardada antes do F5 conseguir retoma-la.
@@ -1609,31 +1604,27 @@ async function esqueciSenha(){
   // popular dropdown de fase avançado com fases detalhadas
   const selFaseAv=document.getElementById('fdcc_fase');
   if(selFaseAv)selFaseAv.innerHTML='<option value="">Todas</option>'+opcoesFaseDetalhada();
-  // filtro de coordenação (chips)
-  const coordChips=document.getElementById('coordChips');
-  if(coordChips){
-    coordChips.querySelectorAll('.coord').forEach(chip=>{
-      chip.addEventListener('click',()=>{
-        coordChips.querySelectorAll('.coord').forEach(c=>c.classList.remove('on'));
-        chip.classList.add('on');
-        FILTRO_COORD=chip.dataset.coord||'TODAS';
-        atualizarListas();
-      });
-    });
-  }
-  // filtro de prioritário (segmento)
-  const segPrio=document.getElementById('segPrio');
-  if(segPrio){
-    segPrio.querySelectorAll('button').forEach(b=>{
-      b.addEventListener('click',()=>{
-        segPrio.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
-        b.classList.add('on');
-        FILTRO_PRIO=b.dataset.prio||'todos';
-        atualizarListas();
-      });
-    });
-  }
-  document.getElementById('btnFiltersDcc').addEventListener('click',()=>ov.classList.add('open'));
+  // Os filtros existem em todas as telas de lista. Como cada pessoa so
+  // enxerga a tela do seu nivel, o estado do filtro e compartilhado —
+  // e a delegacao no document cobre as quatro barras de uma vez.
+  document.addEventListener('click',e=>{
+    const chip=e.target.closest('.coord-chips .coord');
+    if(chip){
+      FILTRO_COORD=chip.dataset.coord||'TODAS';
+      sincronizarBarrasDeFiltro();
+      atualizarListas();
+      return;
+    }
+    const bt=e.target.closest('.seg-prio button');
+    if(bt){
+      FILTRO_PRIO=bt.dataset.prio||'todos';
+      sincronizarBarrasDeFiltro();
+      atualizarListas();
+      return;
+    }
+    if(e.target.closest('.abre-filtros')) ov.classList.add('open');
+  });
+
   document.getElementById('closeFiltersDcc').addEventListener('click',()=>ov.classList.remove('open'));
   document.getElementById('applyFiltersDcc').addEventListener('click',()=>{
     FILTRO_AV={
@@ -1917,8 +1908,8 @@ function linhaProcesso(p){
     +'<td class="obj-cell" data-tip="'+sanitize(tip)+'">'+estrela+sanitize(p.objeto)+'</td>'
     +'<td>'+sanitize(area||'—')+'</td>'
     +'<td>'+sanitize(etapa)+'</td>'
-    +'<td>'+sanitize(p.prazo_final||'—')+'</td>'
-    +'<td>'+sanitize(p.prazo_final||'—')+'</td>'
+    +'<td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td>'
+    +'<td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td>'
     +'<td>'+statusBadge(p.status)+'</td>'
     +'<td><span class="info-dot" onclick="event.stopPropagation();abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span></td>'
     +'</tr>'
@@ -1983,8 +1974,11 @@ async function atualizarListas(){
       }
       // gabinete e dcc veem todos
     }
-    const linhas=procs.map(linhaProcesso).join('');
-    // Gabinete, Ponto Focal, Subsecretaria: mesma listagem (filtro por área vem com o Auth)
+    // os mesmos filtros da DCC valem para as outras telas
+    const procsLista=aplicarFiltros(procs);
+    const linhas=procsLista.length
+      ? procsLista.map(linhaProcesso).join('')
+      : linhaVaziaLista();
     ['#screen-gabinete','#screen-focal','#screen-sub'].forEach(sel=>{
       const body=document.querySelector(sel+' tbody');
       if(body)body.innerHTML=linhas;
@@ -2018,19 +2012,7 @@ async function atualizarListas(){
     // DCC lista todos, com filtros de coordenação e prioritário
     const dccBody=document.querySelector('#screen-dcc tbody');
     if(dccBody){
-      let procsDcc=procs.slice();
-      if(FILTRO_COORD && FILTRO_COORD!=='TODAS'){
-        procsDcc=procsDcc.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
-      }
-      if(FILTRO_PRIO==='sim') procsDcc=procsDcc.filter(p=>p.prioritario);
-      else if(FILTRO_PRIO==='nao') procsDcc=procsDcc.filter(p=>!p.prioritario);
-      // filtros avançados
-      if(FILTRO_AV.sei) procsDcc=procsDcc.filter(p=>(p.num_sei||'').toLowerCase().includes(FILTRO_AV.sei.toLowerCase()));
-      if(FILTRO_AV.area) procsDcc=procsDcc.filter(p=>p.subsecretaria===FILTRO_AV.area);
-      if(FILTRO_AV.status) procsDcc=procsDcc.filter(p=>p.status===FILTRO_AV.status);
-      if(FILTRO_AV.modal) procsDcc=procsDcc.filter(p=>p.modalidade===FILTRO_AV.modal);
-      if(FILTRO_AV.fase) procsDcc=procsDcc.filter(p=>p.etapa_atual===FILTRO_AV.fase);
-      if(FILTRO_AV.objeto) procsDcc=procsDcc.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
+      const procsDcc=aplicarFiltros(procs);
       dccBody.innerHTML=procsDcc.map(linhaProcessoDCC).join('');
       if(!procsDcc.length) dccBody.innerHTML=linhaVaziaDcc();
     }
@@ -2047,6 +2029,37 @@ async function atualizarListas(){
 // DCC tem 9: um colspan fixo criava coluna fantasma nas de 8.
 function colunasDaTela(sel){
   return document.querySelectorAll(sel+' thead th').length || 8;
+}
+
+// O Gabinete acompanha os prioritarios, entao entra ja filtrado por eles.
+// Os demais entram sem filtro.
+function aplicarFiltroInicial(perfil){
+  FILTRO_PRIO = (perfil && perfil.nivel==='gabinete') ? 'sim' : 'todos';
+  FILTRO_COORD='TODAS';
+  if(typeof sincronizarBarrasDeFiltro==='function') sincronizarBarrasDeFiltro();
+}
+
+// Um filtro so, usado pelas quatro telas.
+function aplicarFiltros(lista){
+  let r=lista.slice();
+  if(FILTRO_COORD && FILTRO_COORD!=='TODAS') r=r.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
+  if(FILTRO_PRIO==='sim') r=r.filter(p=>p.prioritario);
+  else if(FILTRO_PRIO==='nao') r=r.filter(p=>!p.prioritario);
+  if(FILTRO_AV.sei)    r=r.filter(p=>(p.num_sei||'').toLowerCase().includes(FILTRO_AV.sei.toLowerCase()));
+  if(FILTRO_AV.area)   r=r.filter(p=>p.subsecretaria===FILTRO_AV.area);
+  if(FILTRO_AV.status) r=r.filter(p=>p.status===FILTRO_AV.status);
+  if(FILTRO_AV.modal)  r=r.filter(p=>p.modalidade===FILTRO_AV.modal);
+  if(FILTRO_AV.fase)   r=r.filter(p=>p.etapa_atual===FILTRO_AV.fase);
+  if(FILTRO_AV.objeto) r=r.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
+  return r;
+}
+
+// Estado vazio das telas de 8 colunas (Gabinete, Sub, Ponto Focal)
+function linhaVaziaLista(){
+  return '<tr><td colspan="8" style="padding:0">'
+    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+    + '<div class="empty-tile"><i data-lucide="filter"></i></div>'
+    + '<p>Nenhum processo para os filtros selecionados.</p></div></td></tr>';
 }
 
 // Filtro sem resultado na DCC: a frase muda conforme o filtro ativo.
@@ -2106,6 +2119,16 @@ function filtrarPorKpi(status){
   const lista=document.querySelector('#screen-dcc .listwrap');
   if(lista && !jaAtivo) lista.scrollIntoView({behavior:'smooth',block:'start'});
 }
+// Deixa as 4 barras de filtro mostrando o mesmo estado.
+function sincronizarBarrasDeFiltro(){
+  document.querySelectorAll('.coord-chips .coord').forEach(c=>{
+    c.classList.toggle('on',(c.dataset.coord||'TODAS')===FILTRO_COORD);
+  });
+  document.querySelectorAll('.seg-prio button').forEach(b=>{
+    b.classList.toggle('on',(b.dataset.prio||'todos')===FILTRO_PRIO);
+  });
+}
+
 // Marca visualmente qual balão está filtrando
 function marcarKpiAtivo(){
   const pares=[['kpi-tag-atraso','em_atraso'],['kpi-tag-validacao','aguardando_validacao']];
@@ -2134,6 +2157,7 @@ async function fazerLogin(){
     const perfil=await authPerfil();
     if(!perfil){msg.style.display='block';msg.textContent='Seu acesso ainda não foi configurado. Contate a DCC.';return;}
     USUARIO_LOGADO=perfil;
+    aplicarFiltroInicial(perfil);
     // 3) primeiro acesso? obriga a trocar a senha
     if(perfil.precisa_trocar_senha){
       abrirTrocaSenha();
@@ -2226,7 +2250,7 @@ async function abrirProcesso(id){
     setTxt('pp_valor',fmtValor(proc.valor));
     setTxt('pp_codigo',proc.codigo||'—');
     setTxt('pp_area',(proc.subsecretaria||'')+(proc.superintendencia?' › '+proc.superintendencia:'')||'—');
-    setTxt('pp_prazo',proc.prazo_final||'—');
+    setTxt('pp_prazo',fmtData(proc.prazo_final));
     setTxt('pp_contrato',proc.tem_contrato?'Sim':'Não');
     // incluir diretoria no caminho da área, se houver
     if(proc.diretoria){setTxt('pp_area',(proc.subsecretaria||'')+(proc.superintendencia?' › '+proc.superintendencia:'')+' › '+proc.diretoria);}
@@ -2635,7 +2659,7 @@ async function carregarResumos(pid){
   try{
     const rs=await sbGet('/resumos_semanais?processo_id=eq.'+pid+'&select=*&order=semana_inicio.desc');
     if(!rs.length){cont.innerHTML=estadoVazio('notebook-pen','Nenhum resumo semanal registrado ainda.');return;}
-    const fmtD=d=>d?d.split('-').reverse().join('/'):'';
+    const fmtD=fmtData;
     let html='<div class="week-now fade-in"><div class="wh"><span class="wtag">Último resumo · '+fmtD(rs[0].semana_inicio)+' a '+fmtD(rs[0].semana_fim)+'</span></div>'
       +'<div class="wtxt">'+sanitize(rs[0].texto)+'</div><div class="wby">por '+sanitize(rs[0].autor_email||'—')+'</div></div>';
     if(rs.length>1){
@@ -2800,7 +2824,7 @@ function linhaProcessoDCC(p){
   return '<tr class="row-main"><td class="obj-cell" data-tip="'+sanitize(tip)+'">'+estrela+sanitize(p.objeto)+'</td>'
     +'<td class="mono">'+sanitize(p.num_sei||'—')+'</td><td>'+sanitize(area||'—')+'</td>'
     +'<td>'+sanitize(p.modalidade||'—')+'</td><td>'+sanitize(etapa)+'</td>'
-    +'<td>'+sanitize(p.prazo_final||'—')+'</td><td>'+sanitize(p.prazo_final||'—')+'</td>'
+    +'<td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td><td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td>'
     +'<td>'+stCell+'</td>'
     +'<td><div class="acts">'+acao+editar+excluir+'</div></td></tr>';
 }
