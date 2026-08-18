@@ -2035,6 +2035,12 @@ async function atualizarListas(){
   }
 }
 
+// Quantas colunas a tabela da tela tem. As telas de lista tem 8 e a da
+// DCC tem 9: um colspan fixo criava coluna fantasma nas de 8.
+function colunasDaTela(sel){
+  return document.querySelectorAll(sel+' thead th').length || 8;
+}
+
 // Filtro sem resultado na DCC: a frase muda conforme o filtro ativo.
 function linhaVaziaDcc(){
   let frase='Nenhum processo para os filtros selecionados.';
@@ -2049,32 +2055,31 @@ function linhaVaziaDcc(){
 
 // Nenhum processo no escopo do usuário — diferente de "deu erro".
 function mostrarListaVazia(){
-  const html='<tr><td colspan="9" style="padding:0">'
-    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
-    + '<div class="empty-tile"><i data-lucide="inbox"></i></div>'
-    + '<p>Nenhum processo disponível para o seu acesso.</p>'
-    + '</div></td></tr>';
   ['#screen-gabinete','#screen-sub','#screen-focal','#screen-dcc'].forEach(sel=>{
     const body=document.querySelector(sel+' tbody');
-    if(body) body.innerHTML=html;
+    if(!body) return;
+    body.innerHTML='<tr><td colspan="'+colunasDaTela(sel)+'" style="padding:0">'
+      + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+      + '<div class="empty-tile"><i data-lucide="inbox"></i></div>'
+      + '<p>Nenhum processo disponível para o seu acesso.</p>'
+      + '</div></td></tr>';
   });
   if(window.desenharIcones) window.desenharIcones();
 }
 
 // Escreve o erro na própria tabela, na tela em que a pessoa está.
 function mostrarFalhaNasListas(detalhe){
-  const html='<tr><td colspan="9" style="padding:0">'
-    + '<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
+  const corpo='<div class="empty" style="border:none;box-shadow:none;border-radius:0;padding:56px 24px">'
     + '<div class="empty-tile" style="background:#fef2f2;color:#dc2626"><i data-lucide="wifi-off"></i></div>'
     + '<p style="color:#dc2626">Não foi possível carregar os processos.</p>'
     + '<p style="font-weight:600;color:var(--faint);margin-top:6px;max-width:460px">'
     + sanitize(detalhe||'') + '</p>'
     + '<p style="font-weight:600;color:var(--faint);margin-top:10px">'
-    + 'Tente recarregar a página. Se continuar, avise a DCC.</p>'
-    + '</div></td></tr>';
+    + 'Tente recarregar a página. Se continuar, avise a DCC.</p></div>';
   ['#screen-gabinete','#screen-sub','#screen-focal','#screen-dcc'].forEach(sel=>{
     const body=document.querySelector(sel+' tbody');
-    if(body) body.innerHTML=html;
+    if(!body) return;
+    body.innerHTML='<tr><td colspan="'+colunasDaTela(sel)+'" style="padding:0">'+corpo+'</td></tr>';
   });
   if(window.desenharIcones) window.desenharIcones();
 }
