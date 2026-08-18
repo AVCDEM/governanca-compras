@@ -619,7 +619,7 @@
       </table>
     </div>
     <div style="text-align:center;margin-top:18px">
-      <button onclick="abrirCadastro()" class="btn-primary"><i data-lucide="plus"></i> Cadastrar processo</button>
+      <button onclick="abrirCadastro()" class="btn-primary escrita-only"><i data-lucide="plus"></i> Cadastrar processo</button>
     </div>
   </div>
 </div>
@@ -681,7 +681,7 @@
 
     <div class="card">
       <div class="card-h">Resumo semanal</div>
-      <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="week-add" onclick="abrirResumo()"><i data-lucide="plus"></i> Registrar resumo</button></div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="week-add escrita-only" onclick="abrirResumo()"><i data-lucide="plus"></i> Registrar resumo</button></div>
       <div id="pp_resumos">
         <div style="text-align:center;padding:28px;font-size:12px;font-weight:700;color:var(--faint)">Nenhum resumo registrado ainda.</div>
       </div>
@@ -699,7 +699,7 @@
   </div>
 
   <!-- COLUNA DIREITA: painel de atualização -->
-  <div class="panel">
+  <div class="panel escrita-only">
     <div class="panel-h"><span class="plus"><i data-lucide="plus"></i></span> Nova atualização</div>
     <div class="field">
       <label>Etapa / marco alvo</label>
@@ -784,7 +784,7 @@
       </table>
     </div>
     <div style="text-align:center;margin-top:18px">
-      <button onclick="abrirCadastro()" class="btn-primary"><i data-lucide="plus"></i> Cadastrar processo</button>
+      <button onclick="abrirCadastro()" class="btn-primary escrita-only"><i data-lucide="plus"></i> Cadastrar processo</button>
     </div>
   </div>
   <div class="filters-overlay" id="filtersOverlayDcc">
@@ -938,6 +938,14 @@
 </div>
 
 <style>
+  /* ==== controles de escrita ====
+     Some para quem o banco nao deixa escrever (gabinete e subsecretaria),
+     para a pessoa nao clicar num botao que vai voltar erro. */
+  body.sem-escrita .escrita-only{display:none!important}
+  /* sem o painel lateral, o conteudo ocupa a largura toda em vez de
+     deixar uma coluna de 340px vazia */
+  body.sem-escrita .main{grid-template-columns:1fr}
+
   /* ==== caixa de confirmacao do sistema ==== */
   .conf-overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);
     z-index:120;display:flex;align-items:center;justify-content:center;padding:20px;
@@ -1917,7 +1925,7 @@ function linhaProcesso(p){
     +'<tr class="exp-row"><td colspan="8"><div class="exp-inner">'
     +'<div class="mini-gantt-real" data-pid="'+p.id+'" style="margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--faint)">Carregando linha do tempo…</div></div>'
     +'<div style="margin-top:12px;display:flex;gap:8px">'
-    +'<button onclick="event.stopPropagation();excluirProcesso('+p.id+')" class="btn-danger-soft"><i data-lucide="trash-2"></i> Excluir processo</button>'
+    +'<button onclick="event.stopPropagation();excluirProcesso('+p.id+')" class="btn-danger-soft escrita-only"><i data-lucide="trash-2"></i> Excluir processo</button>'
     +'</div>'
     +'</div></td></tr>';
 }
@@ -2179,9 +2187,18 @@ async function confirmarTrocaSenha(){
     }
   }catch(e){m.style.display='block';m.textContent=e.message;}
 }
+// Espelha pode_escrever() do 05b: so ponto focal e DCC escrevem.
+// Gabinete e Subsecretaria sao somente leitura.
+// Isto e CONFORTO, nao seguranca: quem manda e o RLS. Serve para nao
+// oferecer botao que o banco vai recusar.
+function podeEscrever(){
+  return !!USUARIO_LOGADO && ['ponto_focal','dcc'].includes(USUARIO_LOGADO.nivel);
+}
+
 function aplicarUsuarioNasTelas(){
   if(!USUARIO_LOGADO)return;
   const u=USUARIO_LOGADO;
+  document.body.classList.toggle('sem-escrita',!podeEscrever());
   document.querySelectorAll('#screen-focal .role-tag').forEach(el=>el.textContent='Ponto Focal · '+(u.superintendencia||''));
   document.querySelectorAll('#screen-sub .role-tag').forEach(el=>el.textContent=u.subsecretaria||'Subsecretaria/Assessoria');
 }
@@ -2751,10 +2768,10 @@ function linhaProcessoDCC(p){
   const pendente=p.status==='aguardando_validacao';
   const stCell=pendente?'<span class="st pend">Pendente</span>':statusBadge(p.status);
   const acao=pendente
-    ?'<span class="validate-btn" onclick="event.stopPropagation();validarProcesso('+p.id+')"><i data-lucide="check"></i> Validar</span><span class="info-dot" onclick="abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>'
+    ?'<span class="validate-btn escrita-only" onclick="event.stopPropagation();validarProcesso('+p.id+')"><i data-lucide="check"></i> Validar</span><span class="info-dot" onclick="abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>'
     :'<span class="info-dot" onclick="abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>';
-  const excluir='<span class="del-dot" title="Excluir" onclick="event.stopPropagation();excluirProcesso('+p.id+')" style="cursor:pointer;color:#dc2626;margin-left:8px" data-tip="Excluir processo"><i data-lucide="trash-2"></i></span>';
-  const editar='<span class="edit-dot" title="Editar" onclick="event.stopPropagation();abrirEdicao('+p.id+')" style="cursor:pointer;color:var(--sys-deep);margin-left:8px" data-tip="Editar processo"><i data-lucide="pencil"></i></span>';
+  const excluir='<span class="del-dot escrita-only" title="Excluir" onclick="event.stopPropagation();excluirProcesso('+p.id+')" style="cursor:pointer;color:#dc2626;margin-left:8px" data-tip="Excluir processo"><i data-lucide="trash-2"></i></span>';
+  const editar='<span class="edit-dot escrita-only" title="Editar" onclick="event.stopPropagation();abrirEdicao('+p.id+')" style="cursor:pointer;color:var(--sys-deep);margin-left:8px" data-tip="Editar processo"><i data-lucide="pencil"></i></span>';
   // mouse-over: a tabela do DCC tem 9 colunas e corta o objeto — o balão
   // carrega o nome inteiro e o resto do que não cabe na linha.
   const tip=[p.objeto,p.codigo?'Código: '+p.codigo:null,area||null,
