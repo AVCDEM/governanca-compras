@@ -499,7 +499,7 @@
 <div class="screen" id="screen-gabinete">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag">Gabinete</span><span class="avatar">GB</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag">Gabinete</span><span class="avatar">GB</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap">
     <div class="hero wave-tide">
@@ -510,7 +510,7 @@
         <div class="hero-id">
           <div class="glass hero-tile"><i data-lucide="landmark"></i></div>
           <div style="min-width:0">
-            <p class="hero-eyebrow">Plano Anual de Contrações · SES-MG</p>
+            <p class="hero-eyebrow">Governança de Compras - SES/MG</p>
             <h1>Painel do Gabinete</h1>
           </div>
         </div>
@@ -534,7 +534,6 @@
 </tbody>
       </table>
     </div>
-    <div style="text-align:center;color:var(--faint);font-size:12px;margin-top:18px">Mostrando prioritários · clique na seta para ver o resumo · clique no “i” para abrir o processo completo</div>
   </div>
 </div>
 
@@ -542,7 +541,7 @@
 <div class="screen" id="screen-sub">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag">Subsecretaria de Vigilância em Saúde</span><span class="avatar">SV</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag">Subsecretaria de Vigilância em Saúde</span><span class="avatar">SV</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap">
     <div class="hero wave-tide">
@@ -553,7 +552,7 @@
         <div class="hero-id">
           <div class="glass hero-tile"><i data-lucide="building-2"></i></div>
           <div style="min-width:0">
-            <p class="hero-eyebrow">Plano Anual de Contrações · SES-MG</p>
+            <p class="hero-eyebrow">Governança de Compras - SES/MG</p>
             <h1>Painel da Subsecretaria/Assessoria</h1>
           </div>
         </div>
@@ -577,7 +576,6 @@
 </tbody>
       </table>
     </div>
-    <div style="text-align:center;color:var(--faint);font-size:12px;margin-top:18px">Você vê apenas os processos da sua subsecretaria · destaque para prioritários</div>
   </div>
 </div>
 
@@ -585,7 +583,7 @@
 <div class="screen" id="screen-focal">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag">Ponto Focal · DVAST</span><span class="avatar">PF</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag">Ponto Focal · DVAST</span><span class="avatar">PF</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap">
     <div class="hero wave-tide">
@@ -596,7 +594,7 @@
         <div class="hero-id">
           <div class="glass hero-tile"><i data-lucide="user-round-check"></i></div>
           <div style="min-width:0">
-            <p class="hero-eyebrow">Plano Anual de Contrações · SES-MG</p>
+            <p class="hero-eyebrow">Governança de Compras - SES/MG</p>
             <h1>Painel do Ponto Focal</h1>
           </div>
         </div>
@@ -630,7 +628,7 @@
 <div class="screen" id="screen-processo">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag" id="pp_roletag"></span><span class="avatar">GC</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag" id="pp_roletag"></span><span class="avatar">GC</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap wide">
     <div class="back" onclick="voltarDaPagina()"><i data-lucide="arrow-left"></i> Voltar para a lista</div>
@@ -665,7 +663,6 @@
     <div class="card">
       <div class="card-h">Linha do tempo do processo — executado real por fase</div>
       <div id="pp_gantt_real"></div>
-      <div class="note-box" id="pp_gantt_nota">O gráfico mostra o tempo real de cada fase (entrada → retorno).</div>
     </div>
 
     <div class="card">
@@ -745,7 +742,7 @@
 <div class="screen" id="screen-dcc">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('indicadores')" style="cursor:pointer;font-weight:700;color:var(--sys-deep);font-size:13px;padding:6px 12px;border:1.5px solid var(--sys-deep);border-radius:8px"><i data-lucide="bar-chart-3"></i> Indicadores</span><span class="avatar">DC</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('indicadores')" style="cursor:pointer;font-weight:700;color:var(--sys-deep);font-size:13px;padding:6px 12px;border:1.5px solid var(--sys-deep);border-radius:8px"><i data-lucide="bar-chart-3"></i> Indicadores</span><span class="avatar">DC</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap wide">
     <div class="hero wave-tide">
@@ -756,7 +753,7 @@
         <div class="hero-id">
           <div class="glass hero-tile"><i data-lucide="clipboard-list"></i></div>
           <div style="min-width:0">
-            <p class="hero-eyebrow">Plano Anual de Contrações · SES-MG</p>
+            <p class="hero-eyebrow">Governança de Compras - SES/MG</p>
             <h1>Diretoria de Compras e Contratos</h1>
           </div>
         </div>
@@ -815,7 +812,7 @@
 <div class="screen" id="screen-indicadores">
   <div class="topbar">
     <div class="brand"><span class="spdot"><i data-lucide="shopping-cart"></i></span> Governança em Compras</div>
-    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('dcc')" style="cursor:pointer;font-weight:700;color:var(--sys-deep);font-size:13px;padding:6px 12px;border:1.5px solid var(--sys-deep);border-radius:8px"><i data-lucide="arrow-left"></i> Painel</span><span class="avatar">DC</span><span class="sair" onclick="showScreen('login')"><i data-lucide="log-out"></i> Sair</span></div>
+    <div class="who"><span class="role-tag">Diretoria de Compras e Contratos</span><span class="link-ind" onclick="showScreen('dcc')" style="cursor:pointer;font-weight:700;color:var(--sys-deep);font-size:13px;padding:6px 12px;border:1.5px solid var(--sys-deep);border-radius:8px"><i data-lucide="arrow-left"></i> Painel</span><span class="avatar">DC</span><span class="sair" onclick="sair()"><i data-lucide="log-out"></i> Sair</span></div>
   </div>
   <div class="wrap wide">
     <div class="hero wave-tide">
@@ -826,7 +823,7 @@
         <div class="hero-id">
           <div class="glass hero-tile"><i data-lucide="bar-chart-3"></i></div>
           <div style="min-width:0">
-            <p class="hero-eyebrow">Plano Anual de Contrações · SES-MG</p>
+            <p class="hero-eyebrow">Governança de Compras - SES/MG</p>
             <h1>Indicadores da DCC</h1>
           </div>
         </div>
@@ -1458,6 +1455,13 @@ function authLogout(){
   AUTH_TOKEN=null;REFRESH_TOKEN=null;USUARIO_LOGADO=null;PROCESSOS_CARREGADOS=[];
   esquecerSessao();
 }
+// Sair de verdade: limpa a sessao E volta para o login. O botao "Sair"
+// chama esta funcao; showScreen('login') sozinho apenas troca de tela.
+function sair(){
+  authLogout();
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  showScreen('login',true);
+}
 
 /* ---- sessao sobrevive ao F5 ----
    O token so existia em memoria: recarregar a pagina caia no login.
@@ -1548,10 +1552,9 @@ async function esqueciSenha(){
     btn.classList.add('on');
   }
   function showScreen(id,fromPop){
-    // "Sair" só trocava de tela: o access_token e o perfil continuavam em
-    // memória, então dava para voltar pelo histórico ainda autenticado.
-    // Não passa pelo modo de recuperação de senha, que precisa do token.
-    if(id==='login' && !MODO_RECUPERACAO && typeof authLogout==='function'){ authLogout(); }
+    // NAO deslogar aqui: showScreen('login') tambem roda no carregamento da
+    // pagina, e apagava a sessao guardada antes do F5 conseguir retoma-la.
+    // Sair de verdade e responsabilidade da funcao sair().
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     const el=document.getElementById('screen-'+id);
     if(el)el.classList.add('active');
@@ -1912,8 +1915,6 @@ function linhaProcesso(p){
     +'<td><span class="info-dot" onclick="event.stopPropagation();abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span></td>'
     +'</tr>'
     +'<tr class="exp-row"><td colspan="8"><div class="exp-inner">'
-    +'<div class="last-obs"><div class="oh">Processo '+sanitize(p.codigo)+'</div>'
-    +'Valor: '+fmtValor(p.valor)+' · SEI: '+sanitize(p.num_sei||'—')+'</div>'
     +'<div class="mini-gantt-real" data-pid="'+p.id+'" style="margin-top:14px"><div style="font-size:12px;font-weight:700;color:var(--faint)">Carregando linha do tempo…</div></div>'
     +'<div style="margin-top:12px;display:flex;gap:8px">'
     +'<button onclick="event.stopPropagation();excluirProcesso('+p.id+')" class="btn-danger-soft"><i data-lucide="trash-2"></i> Excluir processo</button>'
@@ -2323,6 +2324,155 @@ function siglaModalidade(m){
   return null;
 }
 // projeta a data de término: hoje + soma dos prazos das fases que FALTAM
+/* ============================================================
+   CALCULADORA DE PRAZOS — planilha "Fases novas.xlsx"
+   dias previstos por etapa, por coordenacao e por modalidade.
+   CAP/COA/CFCO: [dias regular, dias alta prioridade]
+   CL: depende da modalidade e nao varia por prioridade.
+   ============================================================ */
+const PRAZOS_COORD={
+  'COA':{
+    "Análise da justificativa de preço":[6,6],
+    "Realização da pesquisa de preços":[20,20],
+    "Cumprimento de ressalvas jurídicas":[2,2],
+    "Alteração no mapa de preços a pedido do setor demandante":[6,6],
+    "Outros":[1,1],
+  },
+  'CAP':{
+    "Estudo/registro dos apontamentos da nota jurídica":[1,1],
+    "ETP 1ª análise":[10,5],
+    "ETP conferência":[5,5],
+    "ETP conferência final":[5,5],
+    "Conferência pré-solicitação de gestão de RP":[10,5],
+    "TR 1ª análise":[10,5],
+    "TR conferência":[5,5],
+    "Conferência pré-pesquisa de preços":[5,5],
+    "TR conferência final":[5,5],
+    "Contratação pública integralmente analisada encaminhada para a CL (SRP)":[5,5],
+    "Demandante da Contratação":[10,10],
+    "Outros":[1,1],
+  },
+  'CFCO':{
+    "Elaboração de minuta":[2,2],
+    "Conferência do contrato pela SILC":[3,3],
+    "Disponibilização para assinaturas":[5,5],
+    "Publicação e lançamento no Portal de Compras":[2,2],
+    "Outros":[1,1],
+  },
+};
+const PRAZOS_CL={
+  "Pregão Eletrônico":[
+    ["Conferência processual e elaboração do Edital e anexos",7],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e finalização do edital",3],
+    ["Divulgação e preparação para Sessão Pública",5],
+    ["Encerramento e Adjudicação",4],
+    ["Outros",1],
+  ],
+  "Pregão Eletrônico para Registro de Preços":[
+    ["Conferência processual e solicitação de autorização para gestão de RP à Seplag",3],
+    ["Criação do IRP",2],
+    ["Termo de adesão e Consolidação das Adesões",2],
+    ["Elaboração do Edital e anexos",5],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e finalização do edital",3],
+    ["Divulgação e preparação para Sessão Pública",5],
+    ["Encerramento e Adjudicação",4],
+    ["Outros",1],
+  ],
+  "Dispensa":[
+    ["Conferência processual e encaminhamento para análise jurídica",3],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e preparação para homologação",3],
+    ["Outros",1],
+  ],
+  "Inexigibilidade":[
+    ["Conferência processual e encaminhamento para análise jurídica",3],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e preparação para homologação",3],
+    ["Outros",1],
+  ],
+  "COTEP":[
+    ["Conferência processual e elaboração de aviso e anexos",3],
+    ["Aprovação e divulgação",2],
+    ["Sessão Pública",30],
+    ["Homologar e finalizar",3],
+    ["Outros",1],
+  ],
+  "Adesão":[
+    ["Conferência processual e preparação para encaminhamento à Assessoria Jurídica",5],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e homologação",3],
+    ["Outros",1],
+  ],
+  "Concorrência":[
+    ["Conferência processual e elaboração do Edital e anexos",7],
+    ["Preparação para saneamento de ressalvas",1],
+    ["Saneamento de ressalvas e finalização do edital",3],
+    ["Divulgação e preparação para Sessão Pública",5],
+    ["Encerramento e Adjudicação",4],
+    ["Outros",1],
+  ],
+};
+
+// Dias previstos de uma etapa, dada a modalidade e a prioridade do processo.
+// Devolve null quando a etapa nao esta na calculadora.
+function diasPrevistosDaEtapa(fase,modalidade,prioritario){
+  if(!fase) return null;
+  const alta = prioritario?1:0;
+  for(const coord in PRAZOS_COORD){
+    const t=PRAZOS_COORD[coord];
+    if(t[fase]!=null) return t[fase][alta];
+  }
+  const lista=PRAZOS_CL[modalidade];
+  if(lista){ const l=lista.find(x=>x[0]===fase); if(l) return l[1]; }
+  return null;
+}
+
+// O fluxo completo previsto para a modalidade: as etapas de CAP, COA e CFCO
+// (que valem para qualquer modalidade) mais as etapas de CL daquela
+// modalidade. "Outros" fica de fora: e uma etapa coringa, nao faz parte do
+// caminho previsto.
+function fluxoPrevisto(modalidade,prioritario){
+  const alta=prioritario?1:0;
+  const passos=[];
+  ['CAP','COA'].forEach(c=>{
+    const t=PRAZOS_COORD[c]||{};
+    Object.keys(t).forEach(f=>{ if(f!=='Outros') passos.push({fase:f,coord:c,dias:t[f][alta]}); });
+  });
+  (PRAZOS_CL[modalidade]||[]).forEach(([f,d])=>{ if(f!=='Outros') passos.push({fase:f,coord:'CL',dias:d}); });
+  const tc=PRAZOS_COORD['CFCO']||{};
+  Object.keys(tc).forEach(f=>{ if(f!=='Outros') passos.push({fase:f,coord:'CFCO',dias:tc[f][alta]}); });
+  return passos;
+}
+
+// Projecao pela calculadora.
+//   previstoTotal  -> soma de todos os dias do fluxo (o "planejado")
+//   diasRestantes  -> soma das etapas que ainda faltam, a partir da atual
+//   partida        -> data de onde a projecao parte (fim do executado ou hoje,
+//                     o que for mais tarde: uma etapa parada nao "anda sozinha")
+function projetarPelaCalculadora(proc,etapas,fimExec){
+  const modalidade=proc&&proc.modalidade;
+  const prio=!!(proc&&proc.prioritario);
+  const fluxo=fluxoPrevisto(modalidade,prio);
+  if(!fluxo.length) return null;
+  const previstoTotal=fluxo.reduce((a,b)=>a+b.dias,0);
+
+  // etapa atual: a ultima com data de entrada; se nao houver, a do processo
+  const comData=etapas.filter(e=>e.data_entrada).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
+  const faseAtual = comData.length ? comData[comData.length-1].fase
+                                   : (FASE_LABEL[proc&&proc.etapa_atual]||(proc&&proc.etapa_atual)||'');
+  let idx=fluxo.findIndex(x=>x.fase===faseAtual);
+  if(idx<0) idx=0;                     // etapa fora do fluxo: projeta o fluxo inteiro
+  const diasRestantes=fluxo.slice(idx).reduce((a,b)=>a+b.dias,0);
+
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const partida = (fimExec && fimExec>hoje) ? new Date(fimExec) : hoje;
+  const fimProj=new Date(partida); fimProj.setDate(fimProj.getDate()+diasRestantes);
+  return {previstoTotal,diasRestantes,fimProj,partida,fluxo,faseAtual,
+          diasDaAtual:(fluxo[idx]&&fluxo[idx].dias)||null};
+}
+
 async function calcularProjecao(proc,etapas){
   const prazos=await carregarPrazos();
   const sig=siglaModalidade(proc.modalidade);
@@ -2357,31 +2507,35 @@ async function renderGanttResumo(cont,etapas,proc){
   const fimExec=new Date(Math.max(...fins));
   const hoje=new Date(); hoje.setHours(0,0,0,0);
   const concluido=proc&&(proc.status==='concluido');
-  // PLANEJADO: prazo_final do processo (meta)
+
+  // A calculadora (planilha "Fases novas") manda nas duas barras previstas.
+  const calc=projetarPelaCalculadora(proc,etapas,fimExec);
+
+  // PLANEJADO: do inicio real + a soma de TODAS as etapas previstas do fluxo
+  // da modalidade. Antes era o prazo_final digitado no cadastro, que e uma
+  // meta e nao um calculo.
   let fimPlan=null;
-  if(proc&&proc.prazo_final)fimPlan=new Date(proc.prazo_final+'T00:00:00');
-  // PROJETADO: hoje + soma das fases que faltam (calculado dos prazos reais)
-  let fimProj=null, semPrazos=false;
+  if(calc){ fimPlan=new Date(inicio); fimPlan.setDate(fimPlan.getDate()+calc.previstoTotal); }
+  else if(proc&&proc.prazo_final){ fimPlan=new Date(proc.prazo_final+'T00:00:00'); }
+
+  // PROJETADO: de onde o processo parou + as etapas que ainda faltam
+  let fimProj=null;
   if(concluido){ fimProj=fimExec; }
-  else{
-    const proj=await calcularProjecao(proc,etapas);
-    if(proj&&proj.temPrazos)fimProj=proj.fimProj;
-    else{ fimProj=hoje; semPrazos=true; }
-  }
+  else if(calc){ fimProj=calc.fimProj; }
   // Barras escalonadas, cada uma no seu periodo real. Antes as tres
   // comecavam no mesmo ponto e o grafico nao dizia QUANDO cada coisa
   // aconteceu, so quanto tempo durava.
   //   Planejado -> do inicio ate a meta (prazo_final)
   //   Executado -> do inicio real ate o ultimo retorno registrado
   //   Projetado -> comeca ONDE O EXECUTADO PAROU e vai ate a tendencia
-  const inicioProj = fimExec > hoje ? fimExec : hoje;
+  const inicioProj = calc ? calc.partida : (fimExec > hoje ? fimExec : hoje);
   const barras=[
     {label:'Planejado',ini:inicio,      fim:fimPlan,cor:'#007fb6',claro:'rgba(0,127,182,.45)',
-     dica:'Do inicio do processo ate o prazo final desejado'},
+     dica:calc?('Soma dos dias previstos das '+calc.fluxo.length+' etapas da modalidade: '+calc.previstoTotal+' dias'):''},
     {label:'Executado',ini:inicio,      fim:fimExec,cor:'#4f7a24',claro:'rgba(141,198,63,.75)',
      dica:'Periodo ja percorrido, pelas datas registradas nas etapas'},
     {label:'Projetado',ini:inicioProj,  fim:fimProj,cor:'#f58220',claro:'rgba(245,130,32,.72)',
-     dica:'Do ponto em que o processo esta ate o termino previsto'}
+     dica:calc?('Faltam '+calc.diasRestantes+' dias, a partir de "'+calc.faseAtual+'"'):''}
   ].filter(b=>b.fim && b.fim>=b.ini);
   // range temporal total (para a régua)
   const todasDatas=[inicio,hoje,...barras.map(b=>b.ini),...barras.map(b=>b.fim)];
@@ -2412,20 +2566,21 @@ async function renderGanttResumo(cont,etapas,proc){
       +'<div style="width:88px;font-size:11px;font-weight:700;color:var(--muted);text-align:right;flex:none;padding-right:4px">'+b.label+'</div>'
       +'<div style="flex:1;height:20px;position:relative">'
       +'<div style="position:absolute;left:'+left+'%;width:'+width+'%;top:0;bottom:0;background:'+b.claro+';border-radius:6px" data-tip="'+sanitize(b.label+'\n'+fmt(b.ini)+' a '+fmt(b.fim)+'\n'+nd+' dia'+(nd===1?'':'s')+(b.dica?'\n'+b.dica:''))+'"></div>'
-      +'<span style="position:absolute;left:calc('+(left+width)+'% + 6px);top:2px;font-size:9.5px;color:var(--faint);white-space:nowrap">'+fmt(b.fim)+'</span>'
+      +(function(){
+          // perto da borda direita o rotulo estourava o grafico: nesse caso
+          // ele vai para dentro da barra, alinhado a direita.
+          const fim=left+width;
+          return fim>72
+            ? '<span style="position:absolute;left:'+fim+'%;transform:translateX(-100%);margin-left:-6px;top:2px;font-size:9.5px;font-weight:700;color:#fff;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.35)">'+fmt(b.fim)+'</span>'
+            : '<span style="position:absolute;left:calc('+fim+'% + 6px);top:2px;font-size:9.5px;color:var(--faint);white-space:nowrap">'+fmt(b.fim)+'</span>';
+        })()
       +'</div></div>';
   }
   let html='<div style="position:relative">';
   html+=regua+grade;
   html+=barras.map(barraHTML).join('');
   html+='</div>';
-  // resumo textual (atraso projetado)
-  if(fimPlan&&fimProj&&!concluido){
-    const atraso=dias(fimPlan,fimProj);
-    if(atraso>0)html+='<div style="margin-top:8px;font-size:12px;color:#dc2626;font-weight:600">Projeção ultrapassa o planejado em '+atraso+' dias (término previsto: '+fmt(fimProj)+')</div>';
-    else html+='<div style="margin-top:8px;font-size:12px;color:#2a9d6f;font-weight:600">Dentro do prazo planejado (projeção: '+fmt(fimProj)+')</div>';
-  }
-  if(semPrazos)html+='<div style="margin-top:8px;font-size:11px;color:var(--faint)">Projeção indisponível: prazos não definidos para esta modalidade.</div>';
+  // sem texto abaixo do grafico: so o grafico e a legenda
   // legenda
   html+='<div style="display:flex;gap:16px;margin-top:10px;font-size:11px;color:var(--muted);flex-wrap:wrap">'
     +'<span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:rgba(0,127,182,.45);vertical-align:middle;margin-right:5px"></span>Planejado</span>'
