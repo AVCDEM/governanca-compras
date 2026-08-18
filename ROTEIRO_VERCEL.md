@@ -56,16 +56,33 @@ Se funcionar: **está no ar!** 🎉
 
 ---
 
-## IMPORTANTE — período "aberto"
+## Segurança — o banco está trancado
 
-Enquanto não rodarmos o 05_permissoes_rls.sql (o "trancar"), o
-sistema está no ar mas ainda com segurança aberta. Então, neste
-período:
-- Não divulgue o endereço amplamente ainda.
-- Use só você (e quem for ajudar no cadastro) para:
-  1. cadastrar os usuários reais
-  2. cadastrar os processos reais
-- Depois disso, rodamos o "trancar" e aí sim libera para todos.
+O "trancar" foi feito em 18/08/2026, com o **05b_permissoes_rls_corrigido.sql**
+(e não com o 05_permissoes_rls.sql, que tinha três falhas — veja o
+cabeçalho do 05b). O período "aberto" descrito nas versões antigas
+deste roteiro acabou.
+
+O que vale hoje:
+- Só quem está autenticado lê os dados; cada um vê apenas o escopo
+  do seu nível.
+- Escrita é de Ponto Focal e DCC. Gabinete e Subsecretaria só leem.
+- Para reabrir tudo em caso de emergência: rode o **02_permissoes.sql**.
+  Reverte em segundos, sem perder dado.
+
+Conferência rápida de que continua trancado — cole numa aba anônima:
+
+    https://tatinrolrssjervuykej.supabase.co/rest/v1/processos?select=codigo&limit=1&apikey=CHAVE_PUBLICA
+
+Deve responder `permission denied for table processos`. Se responder
+com dados, o banco voltou a ficar aberto.
+
+## O que NÃO pode ir para a web
+
+O repositório guarda os .sql com os processos reais, o histórico e os
+e-mails dos usuários. O **.vercelignore** garante que só o index.html
+seja publicado. Se um dia alguém publicar arrastando a pasta na mão,
+crie uma pasta separada com o index.html sozinho dentro.
 
 ---
 
