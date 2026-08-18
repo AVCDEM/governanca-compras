@@ -2437,25 +2437,48 @@ function fluxoPrevisto(modalidade,prioritario){
 //   partida        -> data de onde a projecao parte (fim do executado ou hoje,
 //                     o que for mais tarde: uma etapa parada nao "anda sozinha")
 function projetarPelaCalculadora(proc,etapas,fimExec){
+  const DIA=1000*60*60*24;
   const modalidade=proc&&proc.modalidade;
   const prio=!!(proc&&proc.prioritario);
   const fluxo=fluxoPrevisto(modalidade,prio);
   if(!fluxo.length) return null;
   const previstoTotal=fluxo.reduce((a,b)=>a+b.dias,0);
 
-  // etapa atual: a ultima com data de entrada; se nao houver, a do processo
-  const comData=etapas.filter(e=>e.data_entrada).sort((a,b)=>(a.ordem||0)-(b.ordem||0));
-  const faseAtual = comData.length ? comData[comData.length-1].fase
-                                   : (FASE_LABEL[proc&&proc.etapa_atual]||(proc&&proc.etapa_atual)||'');
-  let idx=fluxo.findIndex(x=>x.fase===faseAtual);
-  if(idx<0) idx=0;                     // etapa fora do fluxo: projeta o fluxo inteiro
-  const diasRestantes=fluxo.slice(idx).reduce((a,b)=>a+b.dias,0);
+  // Etapa mais AVANCADA do processo que existe no fluxo previsto.
+  // Antes era so a ultima registrada, e um findIndex que falhava caia em
+  // idx=0 -> projetava o processo inteiro, jogando fora o que ja andou.
+  // Etapa fora da calculadora ("Outros" e as que a DCC ainda nao mapeou)
+  // e DESVIO: nao avanca nem retrocede o progresso.
+  const comData=etapas.filter(e=>e.data_entrada);
+  let idx=-1, etapaAtual=null;
+  comData.forEach(e=>{
+    const i=fluxo.findIndex(x=>x.fase===e.fase);
+    if(i>idx){ idx=i; etapaAtual=e; }
+  });
+  // nenhuma etapa reconhecida: melhor nao mostrar projecao do que inventar
+  if(idx<0) return {previstoTotal,diasRestantes:null,fimProj:null,partida:null,
+                    fluxo,faseAtual:null,semReferencia:true};
 
   const hoje=new Date(); hoje.setHours(0,0,0,0);
-  const partida = (fimExec && fimExec>hoje) ? new Date(fimExec) : hoje;
+
+  // A etapa atual conta so o que FALTA dela. Se ja consumiu os dias
+  // previstos, contribui com zero (esta atrasada, nao ganha prazo novo).
+  const passo=fluxo[idx];
+  const entrouEm=new Date(etapaAtual.data_entrada+'T00:00:00');
+  const gastos=Math.max(0,Math.round((hoje-entrouEm)/DIA));
+  const restaDaAtual=Math.max(0,passo.dias-gastos);
+  const depois=fluxo.slice(idx+1).reduce((a,b)=>a+b.dias,0);
+  const diasRestantes=restaDaAtual+depois;
+
+  // parado nao anda sozinho: a projecao parte de hoje (ou do fim do
+  // executado, se ele for mais recente que hoje)
+  const partida=(fimExec&&fimExec>hoje)?new Date(fimExec):hoje;
   const fimProj=new Date(partida); fimProj.setDate(fimProj.getDate()+diasRestantes);
-  return {previstoTotal,diasRestantes,fimProj,partida,fluxo,faseAtual,
-          diasDaAtual:(fluxo[idx]&&fluxo[idx].dias)||null};
+
+  const desvios=comData.filter(e=>!fluxo.some(x=>x.fase===e.fase)).length;
+  return {previstoTotal,diasRestantes,fimProj,partida,fluxo,
+          faseAtual:passo.fase, etapasRestantes:fluxo.length-idx,
+          diasDaAtual:passo.dias, restaDaAtual, desvios, semReferencia:false};
 }
 
 // Gantt resumido: 3 barras (planejado x executado x projetado)
@@ -2484,21 +2507,28 @@ async function renderGanttResumo(cont,etapas,proc){
   // PROJETADO: de onde o processo parou + as etapas que ainda faltam
   let fimProj=null;
   if(concluido){ fimProj=fimExec; }
-  else if(calc){ fimProj=calc.fimProj; }
+  else if(calc && calc.fimProj){ fimProj=calc.fimProj; }   // sem etapa reconhecida a barra nao aparece
   // Barras escalonadas, cada uma no seu periodo real. Antes as tres
   // comecavam no mesmo ponto e o grafico nao dizia QUANDO cada coisa
   // aconteceu, so quanto tempo durava.
   //   Planejado -> do inicio ate a meta (prazo_final)
   //   Executado -> do inicio real ate o ultimo retorno registrado
   //   Projetado -> comeca ONDE O EXECUTADO PAROU e vai ate a tendencia
-  const inicioProj = calc ? calc.partida : (fimExec > hoje ? fimExec : hoje);
+  const inicioProj = (calc && calc.partida) ? calc.partida : (fimExec > hoje ? fimExec : hoje);
   const barras=[
     {label:'Planejado',ini:inicio,      fim:fimPlan,cor:'#007fb6',claro:'rgba(0,127,182,.45)',
-     dica:calc?('Soma dos dias previstos das '+calc.fluxo.length+' etapas da modalidade: '+calc.previstoTotal+' dias'):''},
+     dica:calc?('Ritmo previsto a partir da largada real\n'+calc.fluxo.length+' etapas da modalidade somam '+calc.previstoTotal+' dias'):''},
     {label:'Executado',ini:inicio,      fim:fimExec,cor:'#4f7a24',claro:'rgba(141,198,63,.75)',
      dica:'Periodo ja percorrido, pelas datas registradas nas etapas'},
     {label:'Projetado',ini:inicioProj,  fim:fimProj,cor:'#f58220',claro:'rgba(245,130,32,.72)',
-     dica:calc?('Faltam '+calc.diasRestantes+' dias, a partir de "'+calc.faseAtual+'"'):''}
+     dica:(calc&&!calc.semReferencia)
+       ? ('Faltam '+calc.diasRestantes+' dias'
+          +'\nEtapa atual: '+calc.faseAtual
+          +'\n'+(calc.restaDaAtual>0?('restam '+calc.restaDaAtual+' de '+calc.diasDaAtual+' dias dela')
+                                        :('ja passou dos '+calc.diasDaAtual+' dias previstos dela'))
+          +'\n+ '+(calc.etapasRestantes-1)+' etapas depois'
+          +(calc.desvios?('\n'+calc.desvios+' etapa(s) fora da calculadora, contadas como desvio'):''))
+       : ''}
   ].filter(b=>b.fim && b.fim>=b.ini);
   // range temporal total (para a régua)
   const todasDatas=[inicio,hoje,...barras.map(b=>b.ini),...barras.map(b=>b.fim)];
