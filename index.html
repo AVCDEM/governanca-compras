@@ -217,6 +217,10 @@
 
   /* tabela base */
   .listwrap{background:var(--card);border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);overflow:hidden}
+  /* o cabecalho da DCC tem rotulos longos: deixa quebrar em duas linhas
+     em vez de invadir a coluna do lado */
+  #screen-dcc th{white-space:normal;line-height:1.35;vertical-align:bottom;padding:12px 12px}
+  #screen-dcc td{padding:12px 12px}
   table{width:100%;border-collapse:collapse}
   th{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);font-weight:900;text-align:left;padding:14px 14px;border-bottom:1px solid var(--line2);background:var(--surface);white-space:nowrap}
   td{padding:14px 14px;border-bottom:1px solid var(--line);font-size:13.5px;vertical-align:middle;color:var(--muted)}
@@ -251,7 +255,9 @@
   .onde-area{background:var(--surface);border-color:var(--line2);color:var(--muted)}
 
   /* bloco que abre abaixo da linha */
-  .det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px 28px}
+  .det-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:16px 22px}
+  @media(max-width:1100px){.det-grid{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:700px){.det-grid{grid-template-columns:repeat(2,1fr)}}
   .det-k{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;
     color:var(--faint);margin-bottom:4px}
   .det-v{font-size:13px;font-weight:700;color:var(--body)}
@@ -792,13 +798,13 @@
         <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
         <span class="filt-sep"></span>
         <span class="filt-lbl">Coordenação</span>
-        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="SEM">Sem coord.</span><span class="filt-sep"></span><span class="coord" data-coord="ONDE:ASJUR" data-tip="Processos que estão na Assessoria Jurídica">ASJUR</span><span class="coord" data-coord="ONDE:SEPLAG" data-tip="Processos que estão na Seplag">SEPLAG</span><span class="coord" data-coord="ONDE:AREA" data-tip="Processos que estão com a área demandante">Área dem.</span></div>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="filt-sep"></span><span class="coord" data-coord="ONDE:ASJUR" data-dica-fixa="1" data-tip="Processos que estão na Assessoria Jurídica">ASJUR</span><span class="coord" data-coord="ONDE:SEPLAG" data-dica-fixa="1" data-tip="Processos que estão na Seplag">SEPLAG</span><span class="coord" data-coord="ONDE:AREA" data-dica-fixa="1" data-tip="Processos que estão com a área demandante">Área dem.</span></div>
         <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
       </div>
     </div>
     <div class="listwrap">
       <table style="table-layout:fixed">
-        <colgroup><col style="width:34px"><col style="width:26%"><col style="width:96px"><col style="width:170px"><col style="width:118px"><col style="width:96px"><col style="width:110px"><col style="width:120px"><col style="width:104px"><col style="width:112px"></colgroup>
+        <colgroup><col style="width:34px"><col style="width:22%"><col style="width:92px"><col style="width:158px"><col style="width:116px"><col style="width:96px"><col style="width:118px"><col style="width:132px"><col style="width:118px"><col style="width:108px"></colgroup>
         <thead><tr><th style="width:34px"></th><th>Objeto</th><th>Área</th><th>Etapa atual</th><th>Onde está</th><th>Entrada</th><th data-tip="Data de saída combinada: entrada na etapa mais os dias previstos pela calculadora">Data pactuada</th><th data-tip="Quando a etapa deve sair de fato. Se o prazo já venceu, o mais cedo possível é hoje">Nova data prevista</th><th data-tip="Término projetado do processo inteiro">Prazo final</th><th></th></tr></thead>
         <tbody>
 </tbody>
@@ -1707,14 +1713,17 @@ async function esqueciSenha(){
   document.addEventListener('click',e=>{
     const chip=e.target.closest('.coord-chips .coord');
     if(chip){
-      FILTRO_COORD=chip.dataset.coord||'TODAS';
+      const alvo=chip.dataset.coord||'TODAS';
+      // clicar de novo no filtro ja ativo desfaz e volta para "Todas"
+      FILTRO_COORD = (alvo!=='TODAS' && FILTRO_COORD===alvo) ? 'TODAS' : alvo;
       sincronizarBarrasDeFiltro();
       atualizarListas();
       return;
     }
     const bt=e.target.closest('.seg-prio button');
     if(bt){
-      FILTRO_PRIO=bt.dataset.prio||'todos';
+      const alvo=bt.dataset.prio||'todos';
+      FILTRO_PRIO = (alvo!=='todos' && FILTRO_PRIO===alvo) ? 'todos' : alvo;
       sincronizarBarrasDeFiltro();
       atualizarListas();
       return;
@@ -2325,7 +2334,12 @@ function filtrarPorKpi(status){
 // Deixa as 4 barras de filtro mostrando o mesmo estado.
 function sincronizarBarrasDeFiltro(){
   document.querySelectorAll('.coord-chips .coord').forEach(c=>{
-    c.classList.toggle('on',(c.dataset.coord||'TODAS')===FILTRO_COORD);
+    const alvo=c.dataset.coord||'TODAS';
+    const ativo=alvo===FILTRO_COORD;
+    c.classList.toggle('on',ativo);
+    // so o filtro ativo (e que nao seja "Todas") avisa que da para desmarcar
+    if(ativo && alvo!=='TODAS') c.setAttribute('data-tip','Clique de novo para tirar o filtro');
+    else if(!c.dataset.dicaFixa) c.removeAttribute('data-tip');
   });
   document.querySelectorAll('.seg-prio button').forEach(b=>{
     b.classList.toggle('on',(b.dataset.prio||'todos')===FILTRO_PRIO);
@@ -3149,7 +3163,6 @@ function linhaProcessoDCC(p){
     +    detItem('Status do processo', pendente?'Aguardando validação':(statusBadge(p.status)), false, true)
     +    detItem('Modalidade', p.modalidade)
     +    detItem('Código', p.codigo, true)
-    +    detItem('Valor previsto', p.valor?fmtValor(p.valor):null)
     +    detItem('Contrato', p.tem_contrato?'Sim':'Não')
     +  '</div>'
     +'</div></td></tr>';
