@@ -240,6 +240,29 @@
   .info-dot:hover{border-color:var(--sys);background:rgba(141,198,63,.10)}
   .prazo-late{color:var(--bad);font-weight:900}
 
+  /* etiqueta de "Onde esta": cor por tipo de lugar */
+  .onde{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;
+    font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;
+    white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+    border:1px solid var(--line2);background:var(--surface);color:var(--muted)}
+  .onde-dcc{background:rgba(141,198,63,.16);border-color:rgba(141,198,63,.4);color:var(--sys-deep)}
+  .onde-asjur{background:rgba(0,127,182,.12);border-color:rgba(0,127,182,.35);color:var(--ses-darkblue)}
+  .onde-seplag{background:rgba(253,185,19,.18);border-color:rgba(253,185,19,.45);color:var(--warn)}
+  .onde-area{background:var(--surface);border-color:var(--line2);color:var(--muted)}
+
+  /* bloco que abre abaixo da linha */
+  .det-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px 28px}
+  .det-k{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;
+    color:var(--faint);margin-bottom:4px}
+  .det-v{font-size:13px;font-weight:700;color:var(--body)}
+  .det-v.mono{font-family:Consolas,monospace;font-size:12px;font-variant-numeric:tabular-nums}
+
+  .toast-simples{position:fixed;right:24px;bottom:24px;z-index:140;display:flex;align-items:center;gap:9px;
+    background:var(--sys-deep);color:#fff;font-size:12px;font-weight:900;padding:13px 18px;border-radius:16px;
+    box-shadow:0 12px 30px -10px rgba(15,23,42,.45);opacity:0;transform:translateY(10px);transition:all .25s}
+  .toast-simples.on{opacity:1;transform:none}
+  .toast-simples svg{width:16px;height:16px}
+
   /* expansão */
   .exp-row{display:none}
   .exp-row.open{display:table-row}
@@ -768,20 +791,21 @@
         <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
         <span class="filt-sep"></span>
         <span class="filt-lbl">Coordenação</span>
-        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="SEM">Sem coord.</span></div>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="SEM">Sem coord.</span><span class="filt-sep"></span><span class="coord" data-coord="ONDE:ASJUR" data-tip="Processos que estão na Assessoria Jurídica">ASJUR</span><span class="coord" data-coord="ONDE:SEPLAG" data-tip="Processos que estão na Seplag">SEPLAG</span><span class="coord" data-coord="ONDE:AREA" data-tip="Processos que estão com a área demandante">Área dem.</span></div>
         <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
       </div>
     </div>
     <div class="listwrap">
       <table style="table-layout:fixed">
-        <colgroup><col style="width:24%"><col style="width:158px"><col style="width:104px"><col style="width:154px"><col style="width:156px"><col style="width:104px"><col style="width:104px"><col style="width:128px"><col style="width:116px"></colgroup>
-        <thead><tr><th>Objeto</th><th>Nº SEI</th><th>Área</th><th>Modalidade</th><th>Etapa</th><th>Prazo da etapa</th><th>Prazo final</th><th>Status</th><th></th></tr></thead>
+        <colgroup><col style="width:34px"><col style="width:26%"><col style="width:96px"><col style="width:170px"><col style="width:118px"><col style="width:96px"><col style="width:110px"><col style="width:120px"><col style="width:104px"><col style="width:112px"></colgroup>
+        <thead><tr><th style="width:34px"></th><th>Objeto</th><th>Área</th><th>Etapa atual</th><th>Onde está</th><th>Entrada</th><th data-tip="Data de saída combinada: entrada na etapa mais os dias previstos pela calculadora">Data pactuada</th><th data-tip="Quando a etapa deve sair de fato. Se o prazo já venceu, o mais cedo possível é hoje">Nova data prevista</th><th data-tip="Término projetado do processo inteiro">Prazo final</th><th></th></tr></thead>
         <tbody>
 </tbody>
       </table>
     </div>
     <div style="text-align:center;margin-top:18px">
       <button onclick="abrirCadastro()" class="btn-primary escrita-only"><i data-lucide="plus"></i> Cadastrar processo</button>
+      <button onclick="exportarCSV()" class="btn-outline" style="margin-left:10px" data-tip="Baixa a tabela como está na tela, com os filtros aplicados"><i data-lucide="download"></i> Exportar CSV</button>
     </div>
   </div>
   <div class="filters-overlay" id="filtersOverlayDcc">
@@ -1273,6 +1297,9 @@ function pedirTexto(opcoes){
   });
 }
 
+// data de hoje em AAAA-MM-DD, pelo calendario local
+function hojeISO(){ const d=new Date(); d.setHours(0,0,0,0); return fmtISO(d); }
+
 /* ---- data no formato brasileiro ----
    O banco guarda AAAA-MM-DD; a tela mostra DD/MM/AAAA. Sem depender de
    new Date(), que interpreta a string como UTC e desloca o dia. */
@@ -1402,9 +1429,17 @@ function coordDoProcesso(p){
   const et=p.etapa_atual||'';
   // etapa_atual pode ser uma key macro (f-tr-a) ou um rótulo detalhado direto
   const lbl=FASE_LABEL[et]||et;
-  // Sem correspondencia: fica SEM COORDENACAO. A CAE foi tentada como
-  // destino padrao e estava errado — a DCC nao usa CAE no sistema.
-  return FASE_COORD[lbl]||FASE_COORD[et]||null;
+  const direto=FASE_COORD[lbl]||FASE_COORD[et];
+  if(direto) return direto;
+  // FASE_COORD e a calculadora estavam dessincronizadas: etapas como
+  // "Estudo/registro dos apontamentos da nota juridica" existem na
+  // calculadora (CAP) mas nao em FASE_COORD, e o processo aparecia fora
+  // da DCC. A calculadora e a fonte de verdade dos prazos, entao vale
+  // tambem para dizer de quem e a etapa.
+  for(const coord in PRAZOS_COORD){ if(PRAZOS_COORD[coord][lbl]!=null) return coord; }
+  for(const modal in PRAZOS_CL){ if(PRAZOS_CL[modal].some(x=>x[0]===lbl)) return 'CL'; }
+  // Sem correspondencia em lugar nenhum: SEM COORDENACAO.
+  return null;
 }
 const HIERARQUIA={"SUBRAS": {"nome": "Subsecretaria de Redes de Atenção à Saúde", "supers": {"SAPS": {"nome": "Superintendência de Atenção Primária", "dirs": [{"sig": "DEFAPS", "nome": "Diretoria de Estruturação e Financiamento da Atenção Primária à Saúde"}, {"sig": "DPAPS", "nome": "Diretoria de Políticas de Atenção Primária à Saúde"}, {"sig": "DGIC", "nome": "Diretoria de Gestão da Integralidade do Cuidado"}, {"sig": "DPSPE", "nome": "Diretoria de Promoção da Saúde e Políticas de Equidade"}]}, "SAE": {"nome": "Superintendência de Atenção Especializada", "dirs": [{"sig": "DATE", "nome": "Diretoria de Políticas Estratégicas"}, {"sig": "DAE", "nome": "Diretoria de Políticas e Estruturação de Atenção Especializada"}]}, "SPAH": {"nome": "Superintendência de Políticas de Atenção Hospitalar", "dirs": [{"sig": "DEHUE", "nome": "Diretoria de Estruturação Hospitalar e de Urgência e Emergência"}, {"sig": "DAHUE", "nome": "Diretoria de Atenção Hospitalar e Urgência e Emergência"}]}}}, "SUBVS": {"nome": "Subsecretaria de Vigilância em Saúde", "supers": {"SVE": {"nome": "Superintendência de Vigilância Epidemiológica", "dirs": [{"sig": "DVDTI", "nome": "Diretoria de Vigilância de Doenças Transmissíveis e Imunização"}, {"sig": "DVCC", "nome": "Diretoria de Vigilância de Condições Crônicas"}, {"sig": "DVAST", "nome": "Diretoria de Vigilância em Saúde Ambiental e Saúde do Trabalhador"}]}, "SVS": {"nome": "Superintendência de Vigilância Sanitária", "dirs": [{"sig": "DVSS", "nome": "Diretoria de Vigilância em Serviços de Saúde"}, {"sig": "DVA", "nome": "Diretoria de Vigilância em Alimentos"}, {"sig": "DVMC", "nome": "Diretoria de Vigilância em Medicamentos e Congêneres"}, {"sig": "DVEF", "nome": "Diretoria de Vigilância em Estrutura Física"}]}}}, "SUBASS": {"nome": "Subsecretaria de Acesso a Serviços de Saúde", "supers": {"SAF": {"nome": "Superintendência de Assistência Farmacêutica", "dirs": [{"sig": "DPAF", "nome": "Diretoria de Políticas de Assistência Farmacêutica"}, {"sig": "DPAM", "nome": "Diretoria de Planejamento e Aquisição de Medicamentos"}, {"sig": "DDM", "nome": "Diretoria de Distribuição de Medicamentos"}]}, "SRA": {"nome": "Superintendência de Regulação do Acesso", "dirs": [{"sig": "DERE", "nome": "Diretoria de Estratégias em Regulação Eletiva"}, {"sig": "DRAUE", "nome": "Diretoria de Regulação do Acesso de Urgência e Emergência"}]}, "SJUD": {"nome": "Superintendência de Judicialização da Saúde", "dirs": [{"sig": "DCDJ", "nome": "Diretoria de Cumprimento de Decisões Judiciais"}, {"sig": "DIJ", "nome": "Diretoria de Inteligência em Judicialização"}]}}}, "SUBGF": {"nome": "Subsecretaria de Gestão e Finanças", "supers": {"SPF": {"nome": "Superintendência de Planejamento e Finanças", "dirs": [{"sig": "DCF", "nome": "Diretoria de Contabilidade e Finanças"}, {"sig": "DCR", "nome": "Diretoria de Convênios e Resoluções"}, {"sig": "DPC", "nome": "Diretoria de Prestação de Contas"}, {"sig": "DPO", "nome": "Diretoria de Planejamento e Orçamento"}]}, "SGDP": {"nome": "Superintendência de Gestão e Desenvolvimento de Pessoas", "dirs": [{"sig": "DPDH", "nome": "Diretoria de Planejamento e Desenvolvimento Humano"}, {"sig": "DRH", "nome": "Diretoria de Recursos Humanos"}]}, "SILC": {"nome": "Superintendência de Infraestrutura, Logística e Contratações", "dirs": [{"sig": "DCC", "nome": "Diretoria de Compras e Contratos"}, {"sig": "DIFE", "nome": "Diretoria de Infraestrutura Física e Engenharia"}, {"sig": "DPAT", "nome": "Diretoria de Patrimônio"}, {"sig": "DLOG", "nome": "Diretoria de Logística"}]}}}, "SUBR": {"nome": "Subsecretaria de Regionalização", "supers": {"SIR": {"nome": "Superintendência de Integração Regional", "dirs": [{"sig": "DARPS", "nome": "Diretoria de Articulação Regional de Políticas de Saúde"}, {"sig": "DMPS", "nome": "Diretoria de Monitoramento de Políticas de Saúde"}]}}}};
 const ORGAOS_N1=[{"sig": "ASJUR", "nome": "Assessoria Jurídica"}, {"sig": "ASCOM", "nome": "Assessoria de Comunicação Social"}, {"sig": "AEST", "nome": "Assessoria Estratégica"}, {"sig": "ASRI", "nome": "Assessoria de Relações Institucionais"}, {"sig": "ATI", "nome": "Assessoria de Tecnologia e Informação"}, {"sig": "CSET", "nome": "Controladoria Setorial"}, {"sig": "AUDSUS", "nome": "Auditoria do SUS-MG"}, {"sig": "ASPAR", "nome": "Assessoria de Parcerias"}, {"sig": "GAB", "nome": "Gabinete"}];
@@ -1455,6 +1490,8 @@ async function cadastrarProcesso(dados){
   const etapasFluxo=FASES.filter(f=>f.key!=="f-parado").map(f=>({
     processo_id:pid, fase:f.label, coordenacao:null, versao:1,
     data_pactuada:null, data_conclusao:null,
+    // a etapa em que o processo entra ja nasce com a data de entrada
+    data_entrada: f.key===proc.etapa_atual?hojeISO():null,
     status: f.key===proc.etapa_atual?"em_andamento":"nao_iniciado", ordem:f.ordem
   }));
   await sbPost("etapas",etapasFluxo);
@@ -2002,6 +2039,7 @@ let PROCESSOS_CARREGADOS=[];
 async function atualizarListas(){
   try{
     let procs=await carregarProcessos();
+    await carregarEtapas();   // necessario para as datas da tabela da DCC
     if(!procs||!procs.length){
       // o comentário antigo dizia "mantém exemplos se banco vazio", mas as
       // linhas de exemplo não existem mais — ficava só a tabela em branco.
@@ -2102,10 +2140,59 @@ function aplicarFiltroInicial(perfil){
   if(typeof sincronizarBarrasDeFiltro==='function') sincronizarBarrasDeFiltro();
 }
 
+// ---- etapas de todos os processos, para calcular as datas da tabela ----
+// Uma consulta so (~1.2 mil linhas). Sem isto nao da para saber quando a
+// etapa atual comecou, que e a base da "Data pactuada".
+let ETAPAS_POR_PROCESSO=null;
+async function carregarEtapas(forcar){
+  if(ETAPAS_POR_PROCESSO && !forcar) return ETAPAS_POR_PROCESSO;
+  const mapa={};
+  try{
+    const rows=await sbGet('/etapas?select=processo_id,fase,data_entrada,data_saida,data_retorno,status,ordem&order=ordem.asc');
+    rows.forEach(e=>{ (mapa[e.processo_id]=mapa[e.processo_id]||[]).push(e); });
+  }catch(e){ console.warn('etapas:',e.message); }
+  ETAPAS_POR_PROCESSO=mapa;
+  return mapa;
+}
+
+// Datas da ETAPA ATUAL de um processo, pela calculadora.
+//   entrada        -> quando a etapa atual comecou
+//   pactuada       -> entrada + dias previstos (dias uteis)
+//   novaPrevista   -> se estourou o prazo, o mais cedo que pode sair e hoje
+//   prazoFinal     -> termino projetado do PROCESSO inteiro
+function datasDoProcesso(p,etapas){
+  const fase=FASE_LABEL[p.etapa_atual]||p.etapa_atual||'';
+  const lista=(etapas||[]).filter(e=>e.data_entrada);
+  // a etapa atual e a que casa com etapa_atual; se nao casar, a mais recente
+  let atual=lista.filter(e=>e.fase===fase).sort((a,b)=>a.data_entrada<b.data_entrada?1:-1)[0];
+  if(!atual) atual=lista.sort((a,b)=>a.data_entrada<b.data_entrada?1:-1)[0];
+
+  const calc=projetarPelaCalculadora(p,lista.length?lista:[{fase,data_entrada:atual&&atual.data_entrada}],null);
+  const prazoFinal=(calc&&calc.fimProj)?fmtISO(calc.fimProj):null;
+
+  if(!atual) return {entrada:null,pactuada:null,novaPrevista:null,atrasada:false,prazoFinal,dias:null};
+
+  const dias=diasPrevistosDaEtapa(fase,p.modalidade,p.prioritario);
+  if(dias===null) return {entrada:atual.data_entrada,pactuada:null,novaPrevista:null,atrasada:false,prazoFinal,dias:null};
+
+  const entrou=new Date(atual.data_entrada+'T00:00:00');
+  const hoje=new Date(); hoje.setHours(0,0,0,0);
+  const pactuada=somarDiasUteis(entrou,dias);
+  const atrasada=hoje>pactuada;
+  const novaPrevista=atrasada?hoje:pactuada;
+  return {entrada:atual.data_entrada, pactuada:fmtISO(pactuada),
+          novaPrevista:fmtISO(novaPrevista), atrasada, prazoFinal, dias,
+          diasDeAtraso:atrasada?diasUteisEntre(pactuada,hoje):0};
+}
+
 // Um filtro so, usado pelas quatro telas.
 function aplicarFiltros(lista){
   let r=lista.slice();
-  if(FILTRO_COORD && FILTRO_COORD==='SEM') r=r.filter(p=>!coordDoProcesso(p));
+  if(FILTRO_COORD && FILTRO_COORD.startsWith('ONDE:')){
+    const alvo=FILTRO_COORD.slice(5);
+    r=r.filter(p=>localizacaoDoProcesso(p).tipo===alvo);
+  }
+  else if(FILTRO_COORD==='SEM') r=r.filter(p=>!coordDoProcesso(p));
   else if(FILTRO_COORD && FILTRO_COORD!=='TODAS') r=r.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
   if(FILTRO_PRIO==='sim') r=r.filter(p=>p.prioritario);
   else if(FILTRO_PRIO==='nao') r=r.filter(p=>!p.prioritario);
@@ -2116,6 +2203,57 @@ function aplicarFiltros(lista){
   if(FILTRO_AV.fase)   r=r.filter(p=>p.etapa_atual===FILTRO_AV.fase);
   if(FILTRO_AV.objeto) r=r.filter(p=>(p.objeto||'').toLowerCase().includes(FILTRO_AV.objeto.toLowerCase()));
   return r;
+}
+
+// ---- exportar a tabela da DCC em CSV ----
+// Exporta o que esta na tela: os mesmos filtros, as mesmas colunas.
+function exportarCSV(){
+  const procs=aplicarFiltros(PROCESSOS_CARREGADOS||[]);
+  if(!procs.length){ avisar('Nada para exportar','Nenhum processo nos filtros atuais.','filter'); return; }
+  const colunas=['Objeto','Nº SEI','Código','Área demandante','Subsecretaria','Superintendência',
+    'Diretoria','Modalidade','Etapa atual','Onde está','Entrada na etapa','Data pactuada',
+    'Nova data prevista','Prazo final previsto','Status','Prioritário','Valor previsto','Contrato'];
+  const st={em_andamento:'Em andamento',em_atraso:'Em atraso',concluido:'Concluído',
+            nao_iniciado:'Não iniciado',aguardando_validacao:'Aguardando validação'};
+  const linhas=procs.map(p=>{
+    const d=datasDoProcesso(p,(ETAPAS_POR_PROCESSO||{})[p.id]);
+    return [p.objeto, p.num_sei, p.codigo,
+      [p.subsecretaria,p.superintendencia,p.diretoria].filter(Boolean).join(' > '),
+      p.subsecretaria, p.superintendencia, p.diretoria, p.modalidade,
+      FASE_LABEL[p.etapa_atual]||p.etapa_atual,
+      localizacaoDoProcesso(p).rotulo,
+      fmtData(d.entrada), fmtData(d.pactuada), fmtData(d.novaPrevista), fmtData(d.prazoFinal),
+      st[p.status]||p.status, p.prioritario?'Sim':'Não',
+      p.valor!=null&&p.valor!==''?String(p.valor).replace('.',','):'',
+      p.tem_contrato?'Sim':'Não'];
+  });
+  // ; como separador e virgula decimal: e o que o Excel em portugues espera
+  const escapar=v=>{
+    const t=(v===null||v===undefined)?'':String(v);
+    return /[";\n\r]/.test(t) ? '"'+t.replace(/"/g,'""')+'"' : t;
+  };
+  const csv=[colunas, ...linhas].map(l=>l.map(escapar).join(';')).join('\r\n');
+  // BOM para o Excel reconhecer os acentos
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const hoje=new Date();
+  const nome='processos-dcc-'+hoje.getFullYear()
+    +String(hoje.getMonth()+1).padStart(2,'0')+String(hoje.getDate()).padStart(2,'0')+'.csv';
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=nome;
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},0);
+  showToastSimples(procs.length+' processo'+(procs.length===1?'':'s')+' exportado'+(procs.length===1?'':'s'));
+}
+
+// aviso curto no canto, sem bloquear a tela
+function showToastSimples(msg){
+  const t=document.createElement('div');
+  t.className='toast-simples';
+  t.innerHTML='<i data-lucide="check-circle-2"></i> '+sanitize(msg);
+  document.body.appendChild(t);
+  if(window.desenharIcones) window.desenharIcones();
+  requestAnimationFrame(()=>t.classList.add('on'));
+  setTimeout(()=>{t.classList.remove('on'); setTimeout(()=>t.remove(),250);},3200);
 }
 
 // Estado vazio das telas de 8 colunas (Gabinete, Sub, Ponto Focal)
@@ -2562,6 +2700,46 @@ function diasUteisEntre(de,ate){
   return n;
 }
 
+// ---- ONDE O PROCESSO ESTA ----
+// Derivado da etapa atual, sem campo novo no banco.
+//
+// O nome da etapa sozinho NAO diz se o processo esta na DCC ou se saiu:
+// "Conferencia processual e encaminhamento para analise juridica" e
+// trabalho da CL enquanto esta em curso, e vira ASJUR depois que sai.
+// Quem separa os dois e o par data_saida / data_retorno da etapa, que e
+// como a planilha da DCC controla isso.
+//
+//   entrou e nao saiu            -> esta na coordenacao da etapa
+//   saiu e nao voltou            -> esta FORA: ASJUR, SEPLAG ou area
+//   sem etapa com data           -> nao da para afirmar
+function localizacaoDoProcesso(p,etapas){
+  const bruto=(p&&p.etapa_atual)||'';
+  const faseProc=FASE_LABEL[bruto]||bruto;
+  const lista=(etapas||(ETAPAS_POR_PROCESSO||{})[p&&p.id]||[]).filter(e=>e.data_entrada);
+  // etapa atual: a que casa com etapa_atual; senao, a de entrada mais recente
+  const recente=(a,b)=>a.data_entrada<b.data_entrada?1:-1;
+  let atual=lista.filter(e=>e.fase===faseProc).sort(recente)[0] || lista.sort(recente)[0];
+
+  const coord=coordDoProcesso(p);
+  const naDCC={tipo:'DCC', rotulo:coord||'DCC', titulo:'Na DCC'+(coord?' · coordenação '+coord:'')};
+
+  // sem etapa registrada: assume que esta na coordenacao da etapa atual
+  if(!atual) return coord?naDCC:{tipo:'INDEF',rotulo:'—',titulo:'Sem etapa registrada'};
+
+  const saiu = !!atual.data_saida && !atual.data_retorno;
+  if(!saiu) return naDCC;
+
+  // Saiu da DCC. So restam tres lugares, pela regra da DCC.
+  const t=(atual.fase||faseProc||'').toLowerCase();
+  if(/encaminhamento para an[aá]lise jur|encaminhamento [aà] assessoria jur/.test(t))
+    return {tipo:'ASJUR', rotulo:'ASJUR', titulo:'Na Assessoria Jurídica desde '+fmtData(atual.data_saida)};
+  if(/seplag/.test(t))
+    return {tipo:'SEPLAG', rotulo:'SEPLAG', titulo:'Na Seplag desde '+fmtData(atual.data_saida)};
+
+  const area=[p&&p.diretoria,p&&p.superintendencia,p&&p.subsecretaria].filter(Boolean)[0]||'Área demandante';
+  return {tipo:'AREA', rotulo:area, titulo:'Com a área demandante desde '+fmtData(atual.data_saida)};
+}
+
 // Dias previstos de uma etapa, dada a modalidade e a prioridade do processo.
 // Devolve null quando a etapa nao esta na calculadora.
 function diasPrevistosDaEtapa(fase,modalidade,prioritario){
@@ -2806,7 +2984,7 @@ async function salvarResumo(texto){
   try{
     await sbPost('resumos_semanais',{
       processo_id:PROC_ATUAL.id, semana_inicio:iso(seg), semana_fim:iso(sex),
-      texto:texto, autor_email:'sistema@saude.mg.gov.br'
+      texto:texto, autor_email:(USUARIO_LOGADO&&USUARIO_LOGADO.email)||'sistema@saude.mg.gov.br'
     });
     carregarResumos(PROC_ATUAL.id);
   }catch(e){ avisar('Não foi possível salvar o resumo',e.message,'alert-triangle'); }
@@ -2839,11 +3017,16 @@ async function salvarAtualizacao(){
     await sbPost('atualizacoes',{
       processo_id:PROC_ATUAL.id, etapa_id:parseInt(etapaId), tipo:tipo,
       observacao:obs||null, data_conclusao:dtConc, nova_tendencia:tend,
-      versao:novaVersao, autor_email:'sistema@saude.mg.gov.br', sinalizar_para:sinal||null
+      versao:novaVersao, autor_email:(USUARIO_LOGADO&&USUARIO_LOGADO.email)||'sistema@saude.mg.gov.br', sinalizar_para:sinal||null
     });
     // 2) atualiza a etapa (status, versão, data de conclusão)
+    // A data de entrada nunca era gravada: sem ela nao ha como calcular a
+    // data pactuada de nada que o sistema cadastre. Agora a etapa que vira
+    // "em andamento" registra a entrada, e a que conclui registra a saida.
     const patch={status:novoStatus, versao:novaVersao};
     if(dtConc)patch.data_conclusao=dtConc;
+    if(novoStatus==='em_andamento' && etapa && !etapa.data_entrada) patch.data_entrada=hojeISO();
+    if(novoStatus==='concluido')  patch.data_saida=dtConc||hojeISO();
     await sbPatch('etapas','id=eq.'+etapaId,patch);
     // 3) se a etapa foi concluída, processo fica aguardando validação da DCC
     if(novoStatus==='concluido'){
@@ -2926,25 +3109,55 @@ async function calcularIndicadores(){
 }
 function linhaProcessoDCC(p){
   const estrela=p.prioritario?'<span class="prio-star" data-tip="Processo prioritário"><i data-lucide="star"></i></span>':'';
-  const area=(p.subsecretaria||'')+(p.superintendencia?' › '+p.superintendencia:'');
+  const area=[p.subsecretaria,p.superintendencia,p.diretoria].filter(Boolean).join(' › ');
   const etapa=FASE_LABEL[p.etapa_atual]||p.etapa_atual||'—';
+  const onde=localizacaoDoProcesso(p);
+  const d=datasDoProcesso(p,(ETAPAS_POR_PROCESSO||{})[p.id]);
   const pendente=p.status==='aguardando_validacao';
-  const stCell=pendente?'<span class="st pend">Pendente</span>':statusBadge(p.status);
-  const acao=pendente
-    ?'<span class="validate-btn escrita-only" onclick="event.stopPropagation();validarProcesso('+p.id+')"><i data-lucide="check"></i> Validar</span><span class="info-dot" onclick="abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>'
-    :'<span class="info-dot" onclick="abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>';
+
+  const acao=(pendente?'<span class="validate-btn escrita-only" onclick="event.stopPropagation();validarProcesso('+p.id+')"><i data-lucide="check"></i> Validar</span>':'')
+    +'<span class="info-dot" onclick="event.stopPropagation();abrirProcesso('+p.id+')" data-tip="Abrir o processo completo"><i data-lucide="info"></i></span>';
   const excluir='<span class="del-dot escrita-only" title="Excluir" onclick="event.stopPropagation();excluirProcesso('+p.id+')" style="cursor:pointer;color:#dc2626;margin-left:8px" data-tip="Excluir processo"><i data-lucide="trash-2"></i></span>';
   const editar='<span class="edit-dot escrita-only" title="Editar" onclick="event.stopPropagation();abrirEdicao('+p.id+')" style="cursor:pointer;color:var(--sys-deep);margin-left:8px" data-tip="Editar processo"><i data-lucide="pencil"></i></span>';
-  // mouse-over: a tabela do DCC tem 9 colunas e corta o objeto — o balão
-  // carrega o nome inteiro e o resto do que não cabe na linha.
+
   const tip=[p.objeto,p.codigo?'Código: '+p.codigo:null,area||null,
              p.valor?'Valor: '+fmtValor(p.valor):null].filter(Boolean).join('\n');
-  return '<tr class="row-main"><td class="obj-cell" data-tip="'+sanitize(tip)+'">'+estrela+sanitize(p.objeto)+'</td>'
-    +'<td class="mono">'+sanitize(p.num_sei||'—')+'</td><td>'+sanitize(area||'—')+'</td>'
-    +'<td>'+sanitize(p.modalidade||'—')+'</td><td>'+sanitize(etapa)+'</td>'
-    +'<td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td><td class="tnum">'+sanitize(fmtData(p.prazo_final))+'</td>'
-    +'<td>'+stCell+'</td>'
-    +'<td><div class="acts">'+acao+editar+excluir+'</div></td></tr>';
+  const tipOnde=[onde.titulo, 'Etapa: '+etapa].join('\n');
+  const tipPact=d.dias?('Entrada '+fmtData(d.entrada)+' + '+d.dias+' dias úteis previstos'):'Etapa sem prazo na calculadora';
+  const tipNova=d.atrasada
+      ? ('Prazo venceu há '+d.diasDeAtraso+' dia'+(d.diasDeAtraso===1?'':'s')+' úteis'+'\n'+'O mais cedo possível agora é hoje')
+      : 'Dentro do prazo pactuado';
+
+  const cel=(v,cls,tipo)=>'<td class="tnum '+(cls||'')+'"'+(tipo?' data-tip="'+sanitize(tipo)+'"':'')+'>'+sanitize(fmtData(v))+'</td>';
+
+  return '<tr class="row-main" onclick="toggleExp(this)" data-pid="'+p.id+'">'
+    +'<td><span class="exp-arrow"><i data-lucide="chevron-right"></i></span></td>'
+    +'<td class="obj-cell" data-tip="'+sanitize(tip)+'">'+estrela+sanitize(p.objeto)+'</td>'
+    +'<td>'+sanitize(area||'—')+'</td>'
+    +'<td>'+sanitize(etapa)+'</td>'
+    +'<td><span class="onde onde-'+onde.tipo.toLowerCase()+'" data-tip="'+sanitize(tipOnde)+'">'+sanitize(onde.rotulo)+'</span></td>'
+    +cel(d.entrada)
+    +cel(d.pactuada,'',tipPact)
+    +cel(d.novaPrevista,d.atrasada?'prazo-late':'',tipNova)
+    +cel(d.prazoFinal)
+    +'<td><div class="acts">'+acao+editar+excluir+'</div></td></tr>'
+    +'<tr class="exp-row"><td colspan="10"><div class="exp-inner">'
+    +  '<div class="det-grid">'
+    +    detItem('Número SEI', p.num_sei, true)
+    +    detItem('Status', pendente?'Aguardando validação':(statusBadge(p.status)), false, true)
+    +    detItem('Modalidade', p.modalidade)
+    +    detItem('Código', p.codigo, true)
+    +    detItem('Valor previsto', p.valor?fmtValor(p.valor):null)
+    +    detItem('Contrato', p.tem_contrato?'Sim':'Não')
+    +  '</div>'
+    +'</div></td></tr>';
+}
+
+// um item do bloco que abre abaixo da linha
+function detItem(rotulo,valor,mono,jaHtml){
+  const v = (valor===null||valor===undefined||valor==='') ? '—' : (jaHtml?valor:sanitize(valor));
+  return '<div class="det-item"><div class="det-k">'+sanitize(rotulo)+'</div>'
+       + '<div class="det-v'+(mono?' mono':'')+'">'+v+'</div></div>';
 }
 /* ============================================================
    INICIALIZACAO DA TELA DE LOGIN
