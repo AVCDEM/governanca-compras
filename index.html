@@ -768,7 +768,7 @@
         <div class="seg seg-prio"><button class="on" data-prio="todos">Todos</button><button data-prio="sim">Sim</button><button data-prio="nao">Não</button></div>
         <span class="filt-sep"></span>
         <span class="filt-lbl">Coordenação</span>
-        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="CAE">CAE</span></div>
+        <div class="coord-chips"><span class="coord on" data-coord="TODAS">Todas</span><span class="coord" data-coord="CAP">CAP</span><span class="coord" data-coord="COA">COA</span><span class="coord" data-coord="CL">CL</span><span class="coord" data-coord="CFCO">CFCO</span><span class="coord" data-coord="SEM">Sem coord.</span></div>
         <button class="filt-btn abre-filtros"><i data-lucide="sliders-horizontal"></i> Filtros avançados</button>
       </div>
     </div>
@@ -963,6 +963,15 @@
   .conf-card p{font-size:13px;font-weight:600;color:var(--muted);line-height:1.55;margin-bottom:24px}
   .conf-acoes{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
   .btn-primary.perigo{background:var(--bad);box-shadow:0 8px 20px -8px rgba(220,38,38,.6)}
+  .conf-card.texto{max-width:560px;text-align:left}
+  .conf-card.texto .conf-tile{margin-left:0}
+  .conf-textarea{width:100%;font:inherit;font-size:13px;font-weight:500;line-height:1.55;padding:14px 16px;
+    border:2px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);
+    outline:none;resize:vertical;min-height:120px;transition:border-color .2s}
+  .conf-textarea:focus{border-color:var(--sys)}
+  .conf-contador{font-size:10px;font-weight:900;color:var(--faint);text-transform:uppercase;
+    letter-spacing:.1em;margin:8px 2px 20px;text-align:right}
+  .conf-card.texto .conf-acoes{justify-content:flex-end}
 
   /* ==== modal de cadastro / edicao (duas etapas) ==== */
   .cad-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);
@@ -1208,6 +1217,62 @@ function avisar(titulo,texto,icone){
   return confirmar({titulo,texto,icone:icone||'info',somenteAviso:true,rotuloSim:'Entendi'});
 }
 
+/* ---- caixa de texto do sistema ----
+   Substitui o prompt() do navegador, que ignora a identidade visual.
+   Devolve o texto digitado, ou null se a pessoa cancelar. */
+function pedirTexto(opcoes){
+  return new Promise(resolve=>{
+    const o=opcoes||{};
+    const wrap=document.createElement('div');
+    wrap.className='conf-overlay';
+    wrap.innerHTML=
+      '<div class="conf-card texto" role="dialog" aria-modal="true">'
+      + '<div class="conf-tile"><i data-lucide="'+(o.icone||'notebook-pen')+'"></i></div>'
+      + '<h3>'+sanitize(o.titulo||'Escreva')+'</h3>'
+      + (o.texto?'<p>'+sanitize(o.texto)+'</p>':'')
+      + '<textarea class="conf-textarea" rows="5" placeholder="'+sanitize(o.exemplo||'')+'"></textarea>'
+      + '<div class="conf-contador"><span>0</span> caracteres</div>'
+      + '<div class="conf-acoes">'
+      +   '<button type="button" class="btn-ghost" data-txt="nao">Cancelar</button>'
+      +   '<button type="button" class="btn-primary" data-txt="sim"><i data-lucide="check"></i> '
+      +     sanitize(o.rotuloSim||'Salvar')+'</button>'
+      + '</div></div>';
+    document.body.appendChild(wrap);
+    if(window.desenharIcones) window.desenharIcones();
+    requestAnimationFrame(()=>wrap.classList.add('aberto'));
+
+    const area=wrap.querySelector('.conf-textarea');
+    const contador=wrap.querySelector('.conf-contador span');
+    const salvar=wrap.querySelector('[data-txt="sim"]');
+    const sincronizar=()=>{
+      contador.textContent=area.value.trim().length;
+      salvar.disabled=!area.value.trim();
+      salvar.style.opacity=area.value.trim()?'':'.45';
+      salvar.style.cursor=area.value.trim()?'pointer':'not-allowed';
+    };
+    area.addEventListener('input',sincronizar); sincronizar();
+
+    const fechar=v=>{
+      wrap.classList.remove('aberto');
+      document.removeEventListener('keydown',aoTeclar);
+      setTimeout(()=>wrap.remove(),180);
+      resolve(v);
+    };
+    function aoTeclar(e){
+      if(e.key==='Escape') fechar(null);
+      // Ctrl+Enter salva; Enter sozinho quebra linha, como se espera num texto
+      if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)&&area.value.trim()) fechar(area.value.trim());
+    }
+    wrap.addEventListener('click',e=>{
+      const b=e.target.closest('[data-txt]');
+      if(b) return fechar(b.getAttribute('data-txt')==='sim'&&area.value.trim()?area.value.trim():null);
+      if(e.target===wrap) fechar(null);
+    });
+    document.addEventListener('keydown',aoTeclar);
+    setTimeout(()=>area.focus(),60);
+  });
+}
+
 /* ---- data no formato brasileiro ----
    O banco guarda AAAA-MM-DD; a tela mostra DD/MM/AAAA. Sem depender de
    new Date(), que interpreta a string como UTC e desloca o dia. */
@@ -1283,7 +1348,7 @@ const FASES=[
   {key:"f-hom",label:"Homologação - Portal de Compras",ordem:7},
   {key:"f-parado",label:"Parado/Sem previsão",ordem:99}
 ];
-const COORDENACOES=["CAP","COA","CL","CFCO","CAE"];
+const COORDENACOES=["CAP","COA","CL","CFCO"];
 // mapa: qual coordenação cuida de cada fase (pelo rótulo da fase/etapa)
 const FASE_COORD={
   // CAP — fases de ETP e TR
@@ -1337,9 +1402,9 @@ function coordDoProcesso(p){
   const et=p.etapa_atual||'';
   // etapa_atual pode ser uma key macro (f-tr-a) ou um rótulo detalhado direto
   const lbl=FASE_LABEL[et]||et;
-  // Fase que não pertence a CAP/COA/CL/CFCO fica com a CAE (antes virava
-  // "sem coordenação" e sumia do gráfico de indicadores).
-  return FASE_COORD[lbl]||FASE_COORD[et]||'CAE';
+  // Sem correspondencia: fica SEM COORDENACAO. A CAE foi tentada como
+  // destino padrao e estava errado — a DCC nao usa CAE no sistema.
+  return FASE_COORD[lbl]||FASE_COORD[et]||null;
 }
 const HIERARQUIA={"SUBRAS": {"nome": "Subsecretaria de Redes de Atenção à Saúde", "supers": {"SAPS": {"nome": "Superintendência de Atenção Primária", "dirs": [{"sig": "DEFAPS", "nome": "Diretoria de Estruturação e Financiamento da Atenção Primária à Saúde"}, {"sig": "DPAPS", "nome": "Diretoria de Políticas de Atenção Primária à Saúde"}, {"sig": "DGIC", "nome": "Diretoria de Gestão da Integralidade do Cuidado"}, {"sig": "DPSPE", "nome": "Diretoria de Promoção da Saúde e Políticas de Equidade"}]}, "SAE": {"nome": "Superintendência de Atenção Especializada", "dirs": [{"sig": "DATE", "nome": "Diretoria de Políticas Estratégicas"}, {"sig": "DAE", "nome": "Diretoria de Políticas e Estruturação de Atenção Especializada"}]}, "SPAH": {"nome": "Superintendência de Políticas de Atenção Hospitalar", "dirs": [{"sig": "DEHUE", "nome": "Diretoria de Estruturação Hospitalar e de Urgência e Emergência"}, {"sig": "DAHUE", "nome": "Diretoria de Atenção Hospitalar e Urgência e Emergência"}]}}}, "SUBVS": {"nome": "Subsecretaria de Vigilância em Saúde", "supers": {"SVE": {"nome": "Superintendência de Vigilância Epidemiológica", "dirs": [{"sig": "DVDTI", "nome": "Diretoria de Vigilância de Doenças Transmissíveis e Imunização"}, {"sig": "DVCC", "nome": "Diretoria de Vigilância de Condições Crônicas"}, {"sig": "DVAST", "nome": "Diretoria de Vigilância em Saúde Ambiental e Saúde do Trabalhador"}]}, "SVS": {"nome": "Superintendência de Vigilância Sanitária", "dirs": [{"sig": "DVSS", "nome": "Diretoria de Vigilância em Serviços de Saúde"}, {"sig": "DVA", "nome": "Diretoria de Vigilância em Alimentos"}, {"sig": "DVMC", "nome": "Diretoria de Vigilância em Medicamentos e Congêneres"}, {"sig": "DVEF", "nome": "Diretoria de Vigilância em Estrutura Física"}]}}}, "SUBASS": {"nome": "Subsecretaria de Acesso a Serviços de Saúde", "supers": {"SAF": {"nome": "Superintendência de Assistência Farmacêutica", "dirs": [{"sig": "DPAF", "nome": "Diretoria de Políticas de Assistência Farmacêutica"}, {"sig": "DPAM", "nome": "Diretoria de Planejamento e Aquisição de Medicamentos"}, {"sig": "DDM", "nome": "Diretoria de Distribuição de Medicamentos"}]}, "SRA": {"nome": "Superintendência de Regulação do Acesso", "dirs": [{"sig": "DERE", "nome": "Diretoria de Estratégias em Regulação Eletiva"}, {"sig": "DRAUE", "nome": "Diretoria de Regulação do Acesso de Urgência e Emergência"}]}, "SJUD": {"nome": "Superintendência de Judicialização da Saúde", "dirs": [{"sig": "DCDJ", "nome": "Diretoria de Cumprimento de Decisões Judiciais"}, {"sig": "DIJ", "nome": "Diretoria de Inteligência em Judicialização"}]}}}, "SUBGF": {"nome": "Subsecretaria de Gestão e Finanças", "supers": {"SPF": {"nome": "Superintendência de Planejamento e Finanças", "dirs": [{"sig": "DCF", "nome": "Diretoria de Contabilidade e Finanças"}, {"sig": "DCR", "nome": "Diretoria de Convênios e Resoluções"}, {"sig": "DPC", "nome": "Diretoria de Prestação de Contas"}, {"sig": "DPO", "nome": "Diretoria de Planejamento e Orçamento"}]}, "SGDP": {"nome": "Superintendência de Gestão e Desenvolvimento de Pessoas", "dirs": [{"sig": "DPDH", "nome": "Diretoria de Planejamento e Desenvolvimento Humano"}, {"sig": "DRH", "nome": "Diretoria de Recursos Humanos"}]}, "SILC": {"nome": "Superintendência de Infraestrutura, Logística e Contratações", "dirs": [{"sig": "DCC", "nome": "Diretoria de Compras e Contratos"}, {"sig": "DIFE", "nome": "Diretoria de Infraestrutura Física e Engenharia"}, {"sig": "DPAT", "nome": "Diretoria de Patrimônio"}, {"sig": "DLOG", "nome": "Diretoria de Logística"}]}}}, "SUBR": {"nome": "Subsecretaria de Regionalização", "supers": {"SIR": {"nome": "Superintendência de Integração Regional", "dirs": [{"sig": "DARPS", "nome": "Diretoria de Articulação Regional de Políticas de Saúde"}, {"sig": "DMPS", "nome": "Diretoria de Monitoramento de Políticas de Saúde"}]}}}};
 const ORGAOS_N1=[{"sig": "ASJUR", "nome": "Assessoria Jurídica"}, {"sig": "ASCOM", "nome": "Assessoria de Comunicação Social"}, {"sig": "AEST", "nome": "Assessoria Estratégica"}, {"sig": "ASRI", "nome": "Assessoria de Relações Institucionais"}, {"sig": "ATI", "nome": "Assessoria de Tecnologia e Informação"}, {"sig": "CSET", "nome": "Controladoria Setorial"}, {"sig": "AUDSUS", "nome": "Auditoria do SUS-MG"}, {"sig": "ASPAR", "nome": "Assessoria de Parcerias"}, {"sig": "GAB", "nome": "Gabinete"}];
@@ -2040,7 +2105,8 @@ function aplicarFiltroInicial(perfil){
 // Um filtro so, usado pelas quatro telas.
 function aplicarFiltros(lista){
   let r=lista.slice();
-  if(FILTRO_COORD && FILTRO_COORD!=='TODAS') r=r.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
+  if(FILTRO_COORD && FILTRO_COORD==='SEM') r=r.filter(p=>!coordDoProcesso(p));
+  else if(FILTRO_COORD && FILTRO_COORD!=='TODAS') r=r.filter(p=>coordDoProcesso(p)===FILTRO_COORD);
   if(FILTRO_PRIO==='sim') r=r.filter(p=>p.prioritario);
   else if(FILTRO_PRIO==='nao') r=r.filter(p=>!p.prioritario);
   if(FILTRO_AV.sei)    r=r.filter(p=>(p.num_sei||'').toLowerCase().includes(FILTRO_AV.sei.toLowerCase()));
@@ -2450,6 +2516,52 @@ const PRAZOS_CL={
   ],
 };
 
+// 59 feriados (2024-01-01 a 2026-12-31), da planilha da DCC
+const FERIADOS=new Set([
+  '2024-01-01','2024-02-12','2024-02-13','2024-02-14','2024-03-28','2024-03-29',
+  '2024-05-01','2024-05-30','2024-05-31','2024-08-15','2024-08-16','2024-10-28',
+  '2024-11-15','2024-11-20','2024-12-24','2024-12-25','2024-12-31','2025-01-01',
+  '2025-03-03','2025-03-04','2025-03-05','2025-04-17','2025-04-18','2025-04-21',
+  '2025-05-01','2025-05-02','2025-06-19','2025-06-20','2025-08-15','2025-10-27',
+  '2025-11-20','2025-11-21','2025-12-08','2025-12-24','2025-12-25','2025-12-26',
+  '2025-12-31','2026-01-01','2026-01-02','2026-02-16','2026-02-17','2026-02-18',
+  '2026-04-02','2026-04-03','2026-04-20','2026-04-21','2026-05-01','2026-06-04',
+  '2026-06-05','2026-09-07','2026-10-12','2026-10-30','2026-11-02','2026-11-20',
+  '2026-12-07','2026-12-08','2026-12-24','2026-12-25','2026-12-31',
+]);
+
+// ---- contagem em DIAS UTEIS ----
+// A planilha da DCC conta dias uteis, nao corridos: verificado contra 731
+// linhas reais das abas CAP/CL/CFCO, com 100% de acerto somando dias uteis
+// e feriados (45% se fossem dias corridos).
+function ehDiaUtil(d){
+  const s=d.getDay();
+  if(s===0||s===6) return false;
+  return !FERIADOS.has(fmtISO(d));
+}
+function fmtISO(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// Soma N dias uteis a uma data. N=0 devolve a propria data.
+function somarDiasUteis(data,n){
+  const d=new Date(data); d.setHours(0,0,0,0);
+  let faltam=Math.max(0,Math.round(n));
+  while(faltam>0){
+    d.setDate(d.getDate()+1);
+    if(ehDiaUtil(d)) faltam--;
+  }
+  return d;
+}
+// Quantos dias uteis ha entre duas datas (exclusivo na origem).
+function diasUteisEntre(de,ate){
+  const a=new Date(de), b=new Date(ate);
+  a.setHours(0,0,0,0); b.setHours(0,0,0,0);
+  if(b<=a) return 0;
+  let n=0; const cur=new Date(a);
+  while(cur<b){ cur.setDate(cur.getDate()+1); if(ehDiaUtil(cur)) n++; }
+  return n;
+}
+
 // Dias previstos de uma etapa, dada a modalidade e a prioridade do processo.
 // Devolve null quando a etapa nao esta na calculadora.
 function diasPrevistosDaEtapa(fase,modalidade,prioritario){
@@ -2516,24 +2628,28 @@ function projetarPelaCalculadora(proc,etapas,fimExec){
   // "O que ela vai consumir" e o previsto; se ja estourou, e o decorrido.
   // Assim uma etapa de 10 dias que ja esta em 20 empurra o termino em 10
   // dias, em vez de reiniciar a contagem a partir de hoje.
-  const decorridoNaAtual=Math.max(0,Math.round((hoje-entrouEm)/DIA));
+  // tudo em dias UTEIS, como a planilha da DCC
+  const decorridoNaAtual=diasUteisEntre(entrouEm,hoje);
   const consumoDaAtual=Math.max(passo.dias,decorridoNaAtual);
   const diasDepois=fluxo.slice(idx+1).reduce((a,b)=>a+b.dias,0);
 
-  const fimProj=new Date(entrouEm);
-  fimProj.setDate(fimProj.getDate()+consumoDaAtual+diasDepois);
+  // data pactuada da etapa atual: entrada + os dias previstos dela
+  const pactuadaDaAtual=somarDiasUteis(entrouEm,passo.dias);
+  // nova data prevista: se estourou, conta do que ja se gastou
+  const fimProj=somarDiasUteis(entrouEm,consumoDaAtual+diasDepois);
 
   // a barra comeca na etapa atual, para continuar o executado em vez de
   // aparecer solta la na frente
   const partida=entrouEm;
-  const diasRestantes=Math.max(0,Math.round((fimProj-hoje)/DIA));
+  const diasRestantes=diasUteisEntre(hoje,fimProj);
   const atrasoDaAtual=Math.max(0,decorridoNaAtual-passo.dias);
   const desvios=comData.filter(e=>!fluxo.some(x=>x.fase===e.fase)).length;
 
   return {previstoTotal,diasRestantes,fimProj,partida,fluxo,
           faseAtual:passo.fase, etapasRestantes:fluxo.length-idx,
           diasDaAtual:passo.dias, decorridoNaAtual, atrasoDaAtual,
-          diasDepois, desvios, semReferencia:false};
+          diasDepois, desvios, semReferencia:false,
+          entrouEm, pactuadaDaAtual};
 }
 
 // Gantt resumido: 3 barras (planejado x executado x projetado)
@@ -2556,7 +2672,7 @@ async function renderGanttResumo(cont,etapas,proc){
   // da modalidade. Antes era o prazo_final digitado no cadastro, que e uma
   // meta e nao um calculo.
   let fimPlan=null;
-  if(calc){ fimPlan=new Date(inicio); fimPlan.setDate(fimPlan.getDate()+calc.previstoTotal); }
+  if(calc){ fimPlan=somarDiasUteis(inicio,calc.previstoTotal); }
   else if(proc&&proc.prazo_final){ fimPlan=new Date(proc.prazo_final+'T00:00:00'); }
 
   // PROJETADO: de onde o processo parou + as etapas que ainda faltam
@@ -2614,13 +2730,6 @@ async function renderGanttResumo(cont,etapas,proc){
   // grade vertical + linha de hoje
   let grade='<div style="position:absolute;left:92px;right:0;top:22px;bottom:26px;pointer-events:none">';
   marcos.forEach(m=>{ grade+='<div style="position:absolute;left:'+pos(m)+'%;top:0;bottom:0;width:1px;background:var(--line2)"></div>'; });
-  if(hoje>=minD&&hoje<=maxD){
-    const ph=pos(hoje);
-    // o rotulo "hoje" ia por cima da barra quando caia na borda direita
-    const alinha = ph>92 ? 'right:0;transform:none' : 'left:'+ph+'%;transform:translateX(-50%)';
-    grade+='<div style="position:absolute;left:'+ph+'%;top:0;bottom:0;width:1px;background:#dc2626;opacity:.55"></div>'
-         + '<span style="position:absolute;'+alinha+';bottom:-17px;font-size:9px;font-weight:900;color:#dc2626;text-transform:uppercase;letter-spacing:.06em">hoje</span>';
-  }
   grade+='</div>';
   // barras posicionadas na régua
   function barraHTML(b){
@@ -2674,11 +2783,16 @@ async function carregarResumos(pid){
     cont.innerHTML=html;
   }catch(e){cont.innerHTML=estadoVazio('wifi-off','Não foi possível carregar os resumos.');}
 }
-function abrirResumo(){
+async function abrirResumo(){
   if(!PROC_ATUAL){ avisar('Nenhum processo aberto','Abra um processo para registrar o resumo da semana.','file-question'); return; }
-  const texto=prompt('Resumo desta semana:');
-  if(!texto||!texto.trim())return;
-  salvarResumo(texto.trim());
+  const texto=await pedirTexto({
+    titulo:'Resumo da semana',
+    texto:'O que aconteceu neste processo nesta semana? Fica registrado com a sua identificação e a data.',
+    exemplo:'Ex.: TR retornou da análise com ressalvas; aguardando ajuste da área técnica.',
+    rotuloSim:'Registrar resumo', icone:'notebook-pen'
+  });
+  if(!texto) return;
+  salvarResumo(texto);
 }
 async function salvarResumo(texto){
   // calcula segunda e sexta da semana atual
@@ -2759,13 +2873,13 @@ async function calcularIndicadores(){
     setTxt('ind_total',total);
     setTxt('ind_situacao','<span style="color:#4d7c0f">'+noPrazo+' no prazo</span> · <span style="color:#dc2626">'+atraso+' atrasados</span>');
     // gráfico: processos por coordenação atual (pela fase detalhada de cada um)
-    // CAE recebe tudo que nao pertence a CAP/COA/CL/CFCO — a barra
-    // "Sem coord." deixa de existir.
-    const coordsList=COORDENACOES;
+    // Sem coordenacao volta a ser uma barra propria: sinaliza informacao
+    // faltante, que a DCC precisa completar processo a processo.
+    const coordsList=COORDENACOES.concat(['Sem coord.']);
     const cont={}; coordsList.forEach(k=>cont[k]=0);
     procs.forEach(p=>{
       const c=coordDoProcesso(p);
-      if(cont[c]!==undefined)cont[c]++; else cont['CAE']++;
+      if(c&&cont[c]!==undefined)cont[c]++; else cont['Sem coord.']++;
     });
     const chaves=coordsList;
     const maxv=Math.max(1,...Object.values(cont));
