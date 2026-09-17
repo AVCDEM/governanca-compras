@@ -256,6 +256,7 @@
     color:var(--faint);margin-bottom:4px}
   .det-v{font-size:13px;font-weight:700;color:var(--body)}
   .det-v.mono{font-family:Consolas,monospace;font-size:12px;font-variant-numeric:tabular-nums}
+  .det-extra{display:block;margin-top:5px;font-size:11px;font-weight:600;color:var(--faint)}
 
   .toast-simples{position:fixed;right:24px;bottom:24px;z-index:140;display:flex;align-items:center;gap:9px;
     background:var(--sys-deep);color:#fff;font-size:12px;font-weight:900;padding:13px 18px;border-radius:16px;
@@ -3144,13 +3145,26 @@ function linhaProcessoDCC(p){
     +'<tr class="exp-row"><td colspan="10"><div class="exp-inner">'
     +  '<div class="det-grid">'
     +    detItem('Número SEI', p.num_sei, true)
-    +    detItem('Status', pendente?'Aguardando validação':(statusBadge(p.status)), false, true)
+    +    detItem('Situação da etapa', situacaoDaEtapa(d), false, true)
+    +    detItem('Status do processo', pendente?'Aguardando validação':(statusBadge(p.status)), false, true)
     +    detItem('Modalidade', p.modalidade)
     +    detItem('Código', p.codigo, true)
     +    detItem('Valor previsto', p.valor?fmtValor(p.valor):null)
     +    detItem('Contrato', p.tem_contrato?'Sim':'Não')
     +  '</div>'
     +'</div></td></tr>';
+}
+
+// Situacao da ETAPA atual (diferente do status do processo): atrasada
+// quando ja passou da data pactuada.
+function situacaoDaEtapa(d){
+  if(!d || !d.pactuada) return '<span class="st">Sem prazo definido</span>';
+  if(d.atrasada){
+    const n=d.diasDeAtraso;
+    return '<span class="st late">Atrasada</span>'
+         + '<span class="det-extra">'+n+' dia'+(n===1?'':'s')+' útei'+(n===1?'l':'s')+' além do pactuado</span>';
+  }
+  return '<span class="st ok">No prazo</span>';
 }
 
 // um item do bloco que abre abaixo da linha
